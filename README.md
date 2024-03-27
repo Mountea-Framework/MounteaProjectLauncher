@@ -15,6 +15,7 @@ To get started with Mountea Project Launcher, clone the repository or download t
 
 ```bash
 git clone https://github.com/Mountea-Framework/MounteaProjectLauncher.git
+```
 
 ## Prerequisites
 Before you begin, ensure you have the following installed:
