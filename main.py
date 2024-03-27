@@ -48,15 +48,24 @@ class ToolTip(object):
             tw.destroy()
 
 
+def read_config():
+    try:
+        with open('DefaultConfig.json', 'r') as config_file:
+            return json.load(config_file)
+    except Exception as e:
+        print(f"Failed to read config file: {e}")
+        return {}
+
+config = read_config()
+
+
 def find_unreal_project(directory):
-    # Check in the current directory
-    if any(file.endswith('.uproject') for file in os.listdir(directory)):
-        return directory
-    # Check in the parent directory
-    parent_directory = os.path.dirname(directory)
-    if any(file.endswith('.uproject') for file in os.listdir(parent_directory)):
-        return parent_directory
-    return None
+    # Check in the given directory for any .uproject file
+    uproject_files = list(Path(directory).glob("*.uproject"))
+    if uproject_files:
+        project_directory = str(uproject_files[0].parent)
+        return True  # Return True if a .uproject file is found
+    return False
 
 
 def get_friendly_name(umap_path):
@@ -70,7 +79,6 @@ class UnrealLauncherApp:
         self.root = root
         self.root.title("Unreal Engine Project Launcher")
         self.root.geometry("1600x600")
-        self.project_directory = find_unreal_project(os.getcwd())
         self.maps_with_paths = {}
         self.launch_options = StringVar(value="Standalone")
         self.tooltip = None
@@ -78,11 +86,14 @@ class UnrealLauncherApp:
         self.tooltip_after_id = None
         self.selected_version = StringVar()
         self.selected_version.trace_add("write", self.update_command_display)
+        self.project_directory = ""
         self.initialize_ui()
 
 
     def initialize_ui(self):
-        if self.project_directory:
+        if not self.project_directory or not self.has_uproject_file():
+            self.setup_selection_page()
+        else:
             self.setup_main_page()
             self.maps_listbox.bind("<Motion>", self.on_hover)
             self.maps_listbox.bind("<Leave>", self.on_leave)
@@ -93,8 +104,32 @@ class UnrealLauncherApp:
                 self.root.iconbitmap(icon_path)
             self.detect_unreal_versions()
             self.load_project_uproject_file()
+            
+        
+    def has_uproject_file(self):
+        """Checks if the project directory contains a .uproject file."""
+        # Check if project_directory is set and not empty
+        if self.project_directory:
+            uproject_files = list(Path(self.project_directory).glob("*.uproject"))
+            return len(uproject_files) > 0
+        return False
+        
+    def setup_selection_page(self):
+        
+        # Button to allow user to select a folder
+        self.select_project_folder_label = tk.Label(self.root, text="SELECT PROJECT")
+        self.select_project_folder_label.pack(fill=tk.X, expand=False)
+        
+        self.select_project_folder_button = Button(self.root, text="Select Project Folder", command=self.select_project_folder)
+        self.select_project_folder_button.pack(pady=10)
+
+    def select_project_folder(self):
+        folder_path = filedialog.askdirectory(title="Select Unreal Project Folder")
+        if folder_path and find_unreal_project(folder_path):
+            self.project_directory = folder_path
+            self.initialize_ui()  # Setup the main UI with the selected project
         else:
-            self.setup_warning_page()
+            messagebox.showerror("Error", "No .uproject file found in the selected directory.")
 
 
     def on_hover(self, event=None):
@@ -153,6 +188,9 @@ class UnrealLauncherApp:
 
 
     def setup_main_page(self):
+        
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
         main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL, sashrelief=tk.RAISED)
         main_paned_window.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
@@ -321,15 +359,12 @@ class UnrealLauncherApp:
         map_path = selected_map.replace('\\', '/')
 
         # Depending on the launch mode, construct the command using the selected editor executable
-        # TODO: load from config!
-        if selected_mode == "Server":
-            command = f'"{editor_executable}" "{uproject_path}" {map_path} -server -log'
-        elif selected_mode == "Client":
-            command = f'"{editor_executable}" "{uproject_path}" 127.0.0.1 -game -WINDOWED -ResX=1200 -ResY=800 -log'
-        elif selected_mode == "Standalone":
-            command = f'"{editor_executable}" "{uproject_path}" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log'
-        else:
+        launch_command_format = config.get("launch_commands", {}).get(selected_mode)
+        if not launch_command_format:
+            print(f"Error: Launch command format for {selected_mode} not found.")
             raise ValueError("Invalid launch mode selected")
+        
+        command = launch_command_format.format(executable=editor_executable, uproject_path=uproject_path, map_path=selected_map)
         
         print(f"{command}")
 
@@ -349,13 +384,8 @@ class UnrealLauncherApp:
         engine_versions_frame = tk.Frame(self.right_side_frame)
         engine_versions_frame.pack(fill=tk.BOTH, expand=True)
 
-        # List of default installation paths for Unreal Engine
-        # TODO: load from config!
-        default_install_paths = [
-            Path("C:/Program Files/Epic Games"),
-            Path("D:/Program Files/Epic Games"),
-            # Add any other common paths where UE might be installed on your system
-        ]
+        default_install_paths = config.get("unreal_engine_paths", [])
+        default_install_paths = [Path(path) for path in default_install_paths]
 
         engine_executables = []
 
