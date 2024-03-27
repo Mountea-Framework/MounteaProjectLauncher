@@ -4,99 +4,18 @@ import os
 import subprocess
 import glob
 import json
-import os
+import sys
 from pathlib import Path
 
+# PROJECT LIBRARIES
+scripts_dir = os.path.join(os.path.dirname(__file__), 'Scripts')
+sys.path.append(scripts_dir)
 
-# Create a bold font
-bold_font = ("Roboto", 12, "bold")
-regular_font = ("Roboto", 10)
-
-def create_button(parent_frame, text, command, inputState='active', **kwargs):
-    button = tk.Button(parent_frame, text=text, command=command, font=regular_font, state=inputState, **kwargs)
-    return button
+from Scripts.utility import *
+from Scripts.ui_elements import *
 
 
-def get_relative_path(filename):
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.realpath(__file__)) #.replace('\\', '/')
-    
-    # Search for the file recursively in the script directory and its subfolders
-    for root, dirs, files in os.walk(script_dir):
-        if filename in files:
-            # If the file is found, return its relative path
-            return os.path.join(root, filename)
-    
-    # If the file is not found in the script directory or its subfolders, return None
-    return None
-
-
-class ToolTip(object):
-
-
-    def __init__(self, widget):
-        self.widget = widget
-        self.tip_window = None
-        self.id = None
-        self.x = self.y = 0
-        self.tooltip_after_id = None
-
-
-    def show_tip(self, text, index):
-        """Display text in tooltip window at the specific index"""
-        self.text = text
-        if self.tip_window or not self.text:
-            return
-        
-        # Calculate the bbox for the specified index
-        bbox = self.widget.bbox(index)
-        if not bbox:
-            return
-        x, y, width, height = bbox
-        x = x + self.widget.winfo_rootx() + 25
-        y = y + self.widget.winfo_rooty() + 20
-        self.tip_window = tw = tk.Toplevel(self.widget)
-        tw.wm_overrideredirect(True)
-        tw.wm_geometry("+%d+%d" % (x, y))
-        label = tk.Label(tw, text=self.text, justify=tk.LEFT,
-                      background="#ffffe0", relief=tk.SOLID, borderwidth=1,
-                      font=("tahoma", "8", "normal"))
-        label.pack(ipadx=1)
-
-
-    def hide_tip(self):
-        tw = self.tip_window
-        self.tip_window = None
-        if tw:
-            tw.destroy()
-
-
-def read_config():
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-    # Construct the absolute path to the configuration file
-    config_path = os.path.join(script_dir, 'DefaultConfig.json') #.replace('\\', '/')
-    try:
-        with open(config_path, 'r') as config_file:
-            return json.load(config_file)
-    except Exception as e:
-        print(f"Failed to read config file: {e}")
-        return {}
-
-config = read_config()
-
-
-def find_unreal_project(directory):
-    # Check in the given directory for any .uproject file
-    uproject_files = list(Path(directory).glob("*.uproject"))
-    if uproject_files:
-        project_directory = str(uproject_files[0].parent)
-        return True  # Return True if a .uproject file is found
-    return False
-
-
-def get_friendly_name(umap_path):
-    return os.path.basename(umap_path).replace('.umap', '')
+config = read_config(os.path.dirname(os.path.realpath(__file__))) #read_config()
 
 
 class UnrealLauncherApp:
@@ -104,9 +23,10 @@ class UnrealLauncherApp:
 
     def __init__(self, root):
         self.root = root
-        self.root.title("Unreal Engine Project Launcher")
+        self.root.title("Mountea Project Launcher")        
         self.root.geometry("1600x600")
-        self.root.iconbitmap(get_relative_path("MPLIcon.ico"))
+        self.root.iconbitmap(get_relative_path(os.path.dirname(os.path.realpath(__file__)), "MPLIcon.ico"))
+        self.root.config(bg="dimgray")
         self.maps_with_paths = {}
         self.launch_options = StringVar(value="Standalone")
         self.tooltip = None
@@ -115,10 +35,6 @@ class UnrealLauncherApp:
         self.selected_version = StringVar()
         self.selected_version.trace_add("write", self.update_command_display)
         self.project_directory = ""
-        
-        #icon_path = get_relative_path("icon_refresh.png")
-        #self.refreshIcon = tk.PhotoImage(file=icon_path)
-        #self.refreshIcon = self.refreshIcon.subsample(2, 2)
         
         self.initialize_ui()
 
@@ -139,8 +55,8 @@ class UnrealLauncherApp:
         
     def setup_version_label(self):
         version_text = config.get("version")
-        self.version_label = tk.Label(self.root, text=f"Version: {version_text}", fg="grey")
-        self.version_label.pack(side=tk.TOP, fill=tk.X)
+        self.version_label = tk.Label(self.root, text=f"Version: {version_text}", bg="dimgray")
+        self.version_label.pack(side=tk.BOTTOM, fill=tk.X)
             
         
     def has_uproject_file(self):
@@ -155,8 +71,10 @@ class UnrealLauncherApp:
     def setup_selection_page(self):
         
         # Button to allow user to select a folder
-        self.select_project_folder_label = tk.Label(self.root, text="SELECT PROJECT", font=bold_font)
+        
+        self.select_project_folder_label = tk.Label(self.root, text="SELECT PROJECT", font=bold_font, bg="dimgray")
         self.select_project_folder_label.pack(fill=tk.X, expand=False)
+             
         
         self.select_project_folder_button = create_button(self.root, "Select Project Folder", command=self.select_project_folder)
         self.select_project_folder_button.pack(pady=10)
@@ -231,10 +149,10 @@ class UnrealLauncherApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL)
+        main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL, bg="dimgray")
         main_paned_window.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
 
-        self.upper_paned_window = tk.PanedWindow(main_paned_window, orient=tk.HORIZONTAL)
+        self.upper_paned_window = tk.PanedWindow(main_paned_window, orient=tk.HORIZONTAL, bg="dimgray")
         self.upper_paned_window.pack(padx=10, pady=10)
         main_paned_window.add(self.upper_paned_window, stretch='always')
 
@@ -251,7 +169,7 @@ class UnrealLauncherApp:
         self.maps_listbox = tk.Listbox(maps_frame, width=50, height=10)
         scrollbar = tk.Scrollbar(maps_frame, orient="vertical", command=self.maps_listbox.yview)
         self.maps_listbox.configure(yscrollcommand=scrollbar.set)
-        self.maps_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.maps_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.right_side_frame = tk.Frame(self.upper_paned_window, borderwidth=2, relief=tk.SOLID)  
@@ -308,35 +226,13 @@ class UnrealLauncherApp:
 
 
     def load_maps(self):
-        project_content_dir = os.path.join(self.project_directory, 'Content')
-        plugin_dirs = glob.glob(os.path.join(self.project_directory, 'Plugins', '*', 'Content'), recursive=True)
-        
-        project_umap_files = glob.glob(os.path.join(project_content_dir, '**/*.umap'), recursive=True)
+        self.maps_with_paths = find_umap_files(self.project_directory)
 
-        plugin_umap_files = []
-        for plugin_dir in plugin_dirs:
-            plugin_umap_files.extend(glob.glob(os.path.join(plugin_dir, '**/*.umap'), recursive=True))
-        
-        all_umap_files = project_umap_files + plugin_umap_files
-        self.maps_with_paths = {}
+        # Clear the existing items in the maps_listbox
         self.maps_listbox.delete(0, tk.END)
 
-        for full_path in all_umap_files:
-            # For project maps
-            if project_content_dir in full_path:
-                relative_path = os.path.relpath(full_path, project_content_dir)
-                unreal_path = '/Game/' + relative_path.replace('\\', '/').replace('.umap', '')
-            # For plugin maps
-            else:
-                for plugin_dir in plugin_dirs:
-                    if plugin_dir in full_path:
-                        plugin_name = os.path.basename(os.path.dirname(plugin_dir))
-                        relative_path = os.path.relpath(full_path, plugin_dir)
-                        unreal_path = f'/{plugin_name}/{relative_path.replace("\\", "/").replace(".umap", "")}'
-                        break
-            
-            friendly_name = get_friendly_name(full_path)
-            self.maps_with_paths[friendly_name] = unreal_path
+        # Insert the friendly names into the maps_listbox
+        for friendly_name in self.maps_with_paths:
             self.maps_listbox.insert(tk.END, friendly_name)
 
 

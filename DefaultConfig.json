@@ -8,6 +8,6 @@
       "Client": "\"{executable}\" \"{uproject_path}\" {map_path}?listen -game -WINDOWED -ResX=1200 -ResY=800 -log",
       "Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log"
     },
-    "version": "0.0.0.3"
+    "version": "0.0.0.4"
   }
   
