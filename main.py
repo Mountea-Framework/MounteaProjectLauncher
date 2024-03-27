@@ -27,7 +27,7 @@ class ToolTip(object):
         
         # Calculate the bbox for the specified index
         bbox = self.widget.bbox(index)
-        if not bbox:  # Check if bbox is None
+        if not bbox:
             return
         x, y, width, height = bbox
         x = x + self.widget.winfo_rootx() + 25
@@ -88,7 +88,7 @@ class UnrealLauncherApp:
             self.maps_listbox.bind("<Leave>", self.on_leave)
             self.maps_listbox.bind("<<ListboxSelect>>", self.on_select)
             script_dir = os.path.dirname(os.path.realpath(__file__))  # Directory of the current script
-            icon_path = os.path.join(script_dir, 'MonuteaProjectLauncher.ico')  # 'your_icon.ico' should be in the same directory as your script
+            icon_path = os.path.join(script_dir, 'MonuteaProjectLauncher.ico')
             if os.path.exists(icon_path):
                 self.root.iconbitmap(icon_path)
             self.detect_unreal_versions()
@@ -153,16 +153,14 @@ class UnrealLauncherApp:
 
 
     def setup_main_page(self):
-        # Main paned window
+
         main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL, sashrelief=tk.RAISED)
         main_paned_window.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
 
-        # Upper paned window to contain maps and right-side elements
         self.upper_paned_window = tk.PanedWindow(main_paned_window, orient=tk.HORIZONTAL, sashrelief=tk.RAISED)
         self.upper_paned_window.pack(padx=10, pady=10)
         main_paned_window.add(self.upper_paned_window, stretch='always')
-        
-        # Frame for maps listbox and scrollbar
+
         maps_frame = tk.Frame(self.upper_paned_window)
         maps_frame.pack(padx=10, pady=10)
         self.upper_paned_window.add(maps_frame, stretch='always')
@@ -170,43 +168,33 @@ class UnrealLauncherApp:
         maps_label = tk.Label(maps_frame, text="MAPS")
         maps_label.pack(fill=tk.X, expand=False)
 
-        # Button to load maps, placed at the top of the maps frame
         self.load_button = Button(maps_frame, text="Load Maps", command=self.load_maps)
         self.load_button.pack(pady=10)
         
-        # The maps listbox and scrollbar
         self.maps_listbox = Listbox(maps_frame, width=50, height=10)
         scrollbar = tk.Scrollbar(maps_frame, orient="vertical", command=self.maps_listbox.yview)
         self.maps_listbox.configure(yscrollcommand=scrollbar.set)
         self.maps_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # Frame for right-side elements (engine versions and launch modes)
         self.right_side_frame = tk.Frame(self.upper_paned_window)
         self.upper_paned_window.add(self.right_side_frame, stretch='always')
         
-        # Engine versions listbox or another widget for engine versions
-        # Here is just a placeholder, you might use dynamic widgets as you already have
         launch_modes_frame = tk.Frame(self.right_side_frame)
         launch_modes_label = tk.Label(self.right_side_frame, text="LAUNCH MODES")
         launch_modes_label.pack(fill=tk.BOTH, expand=False)
         
-        # Launch modes frame with radiobuttons
         launch_modes_frame.pack(fill=tk.BOTH, expand=True)
         Radiobutton(launch_modes_frame, text="Server", variable=self.launch_options, value="Server", command=self.update_command_display).pack(anchor=tk.W)
         Radiobutton(launch_modes_frame, text="Client", variable=self.launch_options, value="Client", command=self.update_command_display).pack(anchor=tk.W)
         Radiobutton(launch_modes_frame, text="Standalone", variable=self.launch_options, value="Standalone", command=self.update_command_display).pack(anchor=tk.W)
 
-        # Engine versions listbox or another widget for engine versions
-        # Here is just a placeholder, you might use dynamic widgets as you already have
         engine_versions_label = tk.Label(self.right_side_frame, text="ENGINE VERSIONS")
         engine_versions_label.pack(fill=tk.BOTH, expand=False)
 
-        # Bottom frame for launch and command buttons
         bottom_frame = tk.Frame(main_paned_window)
         main_paned_window.add(bottom_frame, stretch='never')
         
-        # Command display label
         self.command_display_var = tk.StringVar()
         self.command_display_label = tk.Label(bottom_frame, textvariable=self.command_display_var, bg="white", anchor="w", relief="sunken")
         self.command_display_label.pack(fill=tk.X, padx=5, pady=5)
@@ -214,7 +202,6 @@ class UnrealLauncherApp:
         self.copy_command_button = Button(bottom_frame, text="Copy Command", command=self.copy_text_to_clipboard)
         self.copy_command_button.pack(side=tk.LEFT, padx=5)
 
-        # Launch and Copy Command buttons in the bottom frame
         self.launch_button = Button(bottom_frame, text="Launch", state='disabled', command=self.launch_project)
         self.launch_button.pack(side=tk.LEFT, padx=5)      
         
@@ -222,9 +209,8 @@ class UnrealLauncherApp:
     def copy_text_to_clipboard(self, event=None):
         """Copy the command display label's text to the clipboard."""
         command_text = self.command_display_var.get()
-        self.root.clipboard_clear()  # Clear the clipboard
-        self.root.clipboard_append(command_text)  # Append the text to the clipboard
-        # Optionally, you can provide feedback to the user that the text has been copied
+        self.root.clipboard_clear()
+        self.root.clipboard_append(command_text)
         messagebox.showinfo("Info", "Command copied to clipboard")
 
 
@@ -237,14 +223,12 @@ class UnrealLauncherApp:
         project_content_dir = os.path.join(self.project_directory, 'Content')
         plugin_dirs = glob.glob(os.path.join(self.project_directory, 'Plugins', '*', 'Content'), recursive=True)
         
-        # Search for .umap files in the project's Content directory
         project_umap_files = glob.glob(os.path.join(project_content_dir, '**/*.umap'), recursive=True)
-        # Search for .umap files in each plugin's Content directory
+
         plugin_umap_files = []
         for plugin_dir in plugin_dirs:
             plugin_umap_files.extend(glob.glob(os.path.join(plugin_dir, '**/*.umap'), recursive=True))
         
-        # Combine all found .umap files
         all_umap_files = project_umap_files + plugin_umap_files
         self.maps_with_paths = {}
         self.maps_listbox.delete(0, tk.END)
@@ -298,7 +282,7 @@ class UnrealLauncherApp:
 
             command = self.construct_command(selected_map, selected_mode)
             if command:
-                self.command_display_var.set(command)  # Assuming you have a StringVar for the Entry widget
+                self.command_display_var.set(command)
             else:
                 self.command_display_var.set("Unable to construct command.")
         else:
@@ -337,6 +321,7 @@ class UnrealLauncherApp:
         map_path = selected_map.replace('\\', '/')
 
         # Depending on the launch mode, construct the command using the selected editor executable
+        # TODO: load from config!
         if selected_mode == "Server":
             command = f'"{editor_executable}" "{uproject_path}" {map_path} -server -log'
         elif selected_mode == "Client":
@@ -360,13 +345,14 @@ class UnrealLauncherApp:
         
 
     def detect_unreal_versions(self):
-        # Assume you have already created a frame for engine versions in the upper right pane
+
         engine_versions_frame = tk.Frame(self.right_side_frame)
         engine_versions_frame.pack(fill=tk.BOTH, expand=True)
 
         # List of default installation paths for Unreal Engine
+        # TODO: load from config!
         default_install_paths = [
-            Path("C:/Program Files/Epic Games"),  # The common installation path
+            Path("C:/Program Files/Epic Games"),
             Path("D:/Program Files/Epic Games"),
             # Add any other common paths where UE might be installed on your system
         ]
