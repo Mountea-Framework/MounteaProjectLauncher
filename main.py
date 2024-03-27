@@ -8,6 +8,29 @@ import os
 from pathlib import Path
 
 
+# Create a bold font
+bold_font = ("Roboto", 12, "bold")
+regular_font = ("Roboto", 10)
+
+def create_button(parent_frame, text, command, inputState='active', **kwargs):
+    button = tk.Button(parent_frame, text=text, command=command, font=regular_font, state=inputState, **kwargs)
+    return button
+
+
+def get_relative_path(filename):
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.realpath(__file__)) #.replace('\\', '/')
+    
+    # Search for the file recursively in the script directory and its subfolders
+    for root, dirs, files in os.walk(script_dir):
+        if filename in files:
+            # If the file is found, return its relative path
+            return os.path.join(root, filename)
+    
+    # If the file is not found in the script directory or its subfolders, return None
+    return None
+
+
 class ToolTip(object):
 
 
@@ -49,8 +72,12 @@ class ToolTip(object):
 
 
 def read_config():
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    # Construct the absolute path to the configuration file
+    config_path = os.path.join(script_dir, 'DefaultConfig.json') #.replace('\\', '/')
     try:
-        with open('DefaultConfig.json', 'r') as config_file:
+        with open(config_path, 'r') as config_file:
             return json.load(config_file)
     except Exception as e:
         print(f"Failed to read config file: {e}")
@@ -79,6 +106,7 @@ class UnrealLauncherApp:
         self.root = root
         self.root.title("Unreal Engine Project Launcher")
         self.root.geometry("1600x600")
+        self.root.iconbitmap(get_relative_path("MPLIcon.ico"))
         self.maps_with_paths = {}
         self.launch_options = StringVar(value="Standalone")
         self.tooltip = None
@@ -87,6 +115,11 @@ class UnrealLauncherApp:
         self.selected_version = StringVar()
         self.selected_version.trace_add("write", self.update_command_display)
         self.project_directory = ""
+        
+        #icon_path = get_relative_path("icon_refresh.png")
+        #self.refreshIcon = tk.PhotoImage(file=icon_path)
+        #self.refreshIcon = self.refreshIcon.subsample(2, 2)
+        
         self.initialize_ui()
 
 
@@ -98,14 +131,11 @@ class UnrealLauncherApp:
             self.maps_listbox.bind("<Motion>", self.on_hover)
             self.maps_listbox.bind("<Leave>", self.on_leave)
             self.maps_listbox.bind("<<ListboxSelect>>", self.on_select)
-            script_dir = os.path.dirname(os.path.realpath(__file__))  # Directory of the current script
-            icon_path = os.path.join(script_dir, 'MonuteaProjectLauncher.ico')
-            if os.path.exists(icon_path):
-                self.root.iconbitmap(icon_path)
             self.detect_unreal_versions()
             self.load_project_uproject_file()
             
         self.setup_version_label()
+       
         
     def setup_version_label(self):
         version_text = config.get("version")
@@ -121,14 +151,16 @@ class UnrealLauncherApp:
             return len(uproject_files) > 0
         return False
         
+        
     def setup_selection_page(self):
         
         # Button to allow user to select a folder
-        self.select_project_folder_label = tk.Label(self.root, text="SELECT PROJECT")
+        self.select_project_folder_label = tk.Label(self.root, text="SELECT PROJECT", font=bold_font)
         self.select_project_folder_label.pack(fill=tk.X, expand=False)
         
-        self.select_project_folder_button = Button(self.root, text="Select Project Folder", command=self.select_project_folder)
+        self.select_project_folder_button = create_button(self.root, "Select Project Folder", command=self.select_project_folder)
         self.select_project_folder_button.pack(pady=10)
+
 
     def select_project_folder(self):
         folder_path = filedialog.askdirectory(title="Select Unreal Project Folder")
@@ -199,40 +231,39 @@ class UnrealLauncherApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL, sashrelief=tk.RAISED)
+        main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL)
         main_paned_window.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
 
-        self.upper_paned_window = tk.PanedWindow(main_paned_window, orient=tk.HORIZONTAL, sashrelief=tk.RAISED)
+        self.upper_paned_window = tk.PanedWindow(main_paned_window, orient=tk.HORIZONTAL)
         self.upper_paned_window.pack(padx=10, pady=10)
         main_paned_window.add(self.upper_paned_window, stretch='always')
 
-        maps_frame = tk.Frame(self.upper_paned_window)
+        maps_frame = tk.Frame(self.upper_paned_window, borderwidth=2, relief=tk.SOLID)   
         maps_frame.pack(padx=10, pady=10)
         self.upper_paned_window.add(maps_frame, stretch='always')
 
-        maps_label = tk.Label(maps_frame, text="MAPS")
+        maps_label = tk.Label(maps_frame, text="MAPS", font=bold_font)
         maps_label.pack(fill=tk.X, expand=False)
 
-        self.load_button = Button(maps_frame, text="Load Maps", command=self.load_maps)
+        self.load_button = create_button(maps_frame, "Load Maps", command=self.load_maps) #, image=self.refreshIcon, compound="left", padx=10)
         self.load_button.pack(pady=10)
-        
-        self.maps_listbox = Listbox(maps_frame, width=50, height=10)
+
+        self.maps_listbox = tk.Listbox(maps_frame, width=50, height=10)
         scrollbar = tk.Scrollbar(maps_frame, orient="vertical", command=self.maps_listbox.yview)
         self.maps_listbox.configure(yscrollcommand=scrollbar.set)
         self.maps_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        self.right_side_frame = tk.Frame(self.upper_paned_window)
+
+        self.right_side_frame = tk.Frame(self.upper_paned_window, borderwidth=2, relief=tk.SOLID)  
         self.upper_paned_window.add(self.right_side_frame, stretch='always')
         
-        launch_modes_frame = tk.Frame(self.right_side_frame)
-        launch_modes_label = tk.Label(self.right_side_frame, text="LAUNCH MODES")
+        launch_modes_frame = tk.Frame(self.right_side_frame)  
+        launch_modes_label = tk.Label(self.right_side_frame, text="LAUNCH MODES", font=bold_font)
         launch_modes_label.pack(fill=tk.BOTH, expand=False)
-        
         launch_modes_frame.pack(fill=tk.BOTH, expand=True)
         launch_modes = config.get("launch_commands", {}).keys()
         for mode in launch_modes:
-            Radiobutton(
+            tk.Radiobutton(
                 launch_modes_frame, 
                 text=mode, 
                 variable=self.launch_options, 
@@ -240,29 +271,28 @@ class UnrealLauncherApp:
                 command=self.update_command_display
             ).pack(anchor=tk.W)
 
-        engine_versions_label = tk.Label(self.right_side_frame, text="ENGINE VERSIONS")
+        engine_versions_label = tk.Label(self.right_side_frame, text="ENGINE VERSIONS", font=bold_font)
         engine_versions_label.pack(fill=tk.BOTH, expand=False)
 
-        bottom_frame = tk.Frame(main_paned_window)
+        bottom_frame = tk.Frame(main_paned_window, borderwidth=2, relief=tk.SOLID)  
         main_paned_window.add(bottom_frame, stretch='never')
         
         self.command_display_var = tk.StringVar()
         self.command_display_label = tk.Label(bottom_frame, textvariable=self.command_display_var, bg="white", anchor="w", relief="sunken")
         self.command_display_label.pack(fill=tk.X, padx=5, pady=5)
 
-        self.copy_command_button = Button(bottom_frame, text="Copy Command", command=self.copy_text_to_clipboard)
+        self.copy_command_button = create_button(bottom_frame, "Copy Command", command=self.copy_text_to_clipboard)
         self.copy_command_button.pack(side=tk.LEFT, padx=5)
 
-         # New bottom frame for the Launch button
-        launch_button_frame = tk.Frame(self.root)  # Create the frame
+        # New bottom frame for the Launch button
+        launch_button_frame = tk.Frame(bottom_frame)  
         launch_button_frame.pack(side=tk.BOTTOM, fill=tk.X)
-    
         # Configure the Launch button to fill the X-axis in its frame
-        self.launch_button = tk.Button(launch_button_frame, text="Launch", state='disabled', command=self.launch_project)
-        self.launch_button.pack(fill=tk.X, padx=10, pady=10)
+        self.launch_button = create_button(launch_button_frame, "Launch", command=self.launch_project, inputState='disabled')
+        self.launch_button.pack(fill=tk.X, padx=10, pady=10)          
         
-        version_label = tk.Label(bottom_frame, text=config.get("version"))      
-        
+        version_label = tk.Label(bottom_frame, text=config.get("version"), font=bold_font)  
+ 
 
     def copy_text_to_clipboard(self, event=None):
         """Copy the command display label's text to the clipboard."""
@@ -312,7 +342,7 @@ class UnrealLauncherApp:
 
     def enable_launch(self):
         if self.maps_listbox.curselection() and self.selected_version.get() in self.unreal_versions_info:
-            self.launch_button.config(state='normal')
+            self.launch_button.config(state='normal', borderwidth=2, )
         else:
             self.launch_button.config(state='disabled')
 
