@@ -223,9 +223,15 @@ class UnrealLauncherApp:
         launch_modes_label.pack(fill=tk.BOTH, expand=False)
         
         launch_modes_frame.pack(fill=tk.BOTH, expand=True)
-        Radiobutton(launch_modes_frame, text="Server", variable=self.launch_options, value="Server", command=self.update_command_display).pack(anchor=tk.W)
-        Radiobutton(launch_modes_frame, text="Client", variable=self.launch_options, value="Client", command=self.update_command_display).pack(anchor=tk.W)
-        Radiobutton(launch_modes_frame, text="Standalone", variable=self.launch_options, value="Standalone", command=self.update_command_display).pack(anchor=tk.W)
+        launch_modes = config.get("launch_commands", {}).keys()
+        for mode in launch_modes:
+            Radiobutton(
+                launch_modes_frame, 
+                text=mode, 
+                variable=self.launch_options, 
+                value=mode, 
+                command=self.update_command_display
+            ).pack(anchor=tk.W)
 
         engine_versions_label = tk.Label(self.right_side_frame, text="ENGINE VERSIONS")
         engine_versions_label.pack(fill=tk.BOTH, expand=False)
