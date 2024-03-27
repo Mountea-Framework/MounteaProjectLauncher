@@ -105,6 +105,13 @@ class UnrealLauncherApp:
             self.detect_unreal_versions()
             self.load_project_uproject_file()
             
+        self.setup_version_label()
+        
+    def setup_version_label(self):
+        version_text = config.get("version")
+        self.version_label = tk.Label(self.root, text=f"Version: {version_text}", fg="grey")
+        self.version_label.pack(side=tk.TOP, fill=tk.X)
+            
         
     def has_uproject_file(self):
         """Checks if the project directory contains a .uproject file."""
@@ -246,8 +253,15 @@ class UnrealLauncherApp:
         self.copy_command_button = Button(bottom_frame, text="Copy Command", command=self.copy_text_to_clipboard)
         self.copy_command_button.pack(side=tk.LEFT, padx=5)
 
-        self.launch_button = Button(bottom_frame, text="Launch", state='disabled', command=self.launch_project)
-        self.launch_button.pack(side=tk.LEFT, padx=5)      
+         # New bottom frame for the Launch button
+        launch_button_frame = tk.Frame(self.root)  # Create the frame
+        launch_button_frame.pack(side=tk.BOTTOM, fill=tk.X)
+    
+        # Configure the Launch button to fill the X-axis in its frame
+        self.launch_button = tk.Button(launch_button_frame, text="Launch", state='disabled', command=self.launch_project)
+        self.launch_button.pack(fill=tk.X, padx=10, pady=10)
+        
+        version_label = tk.Label(bottom_frame, text=config.get("version"))      
         
 
     def copy_text_to_clipboard(self, event=None):
