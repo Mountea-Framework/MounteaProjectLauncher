@@ -54,7 +54,6 @@ class UnrealLauncherAppUI:
         self.root.destroy()
 
 
-
         
     def on_select(self, event=None):
         # Update the selected index when an item is clicked
@@ -69,16 +68,15 @@ class UnrealLauncherAppUI:
         self.update_command_display()
 
 
-    def initialize_ui(self):
-        if (self.root):            
-            if not self.project_directory or not self.has_uproject_file:
-                self.setup_selection_page()
-            else:
-                self.setup_main_page()
-                
-            self.setup_version_label()
+    def initialize_ui(self):            
+        if not self.project_directory or not self.has_uproject_file:
+            self.setup_selection_page()
+        else:
+            self.setup_main_page()
             
-            self.root.mainloop()
+        self.setup_version_label()
+        
+        self.root.mainloop()
         
         
     def destroy_widgets(self):
