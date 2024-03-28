@@ -16,11 +16,11 @@ To get started with Mountea Project Launcher, clone the repository or download t
 ### Example
 
 <p align="center" width="100%">
-    <img width="65%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/2110805f-14f7-40a0-a14b-6822d6bf20f4">
+    <img width="65%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/c0064508-8b00-4677-be68-40c639737f50">
 </p>
 
 <p align="center" width="100%">
-    <img width="65%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/9bf8d6a8-f458-49d2-89d0-f7c45ffa5f18">
+    <img width="65%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/ca66f2d1-78fc-4eb1-b2a5-06c3db64e1b1">
 </p>
 
 ### Clone
