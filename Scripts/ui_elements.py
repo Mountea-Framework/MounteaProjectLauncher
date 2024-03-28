@@ -16,9 +16,8 @@ class ToolTip:
         self.tip_window = None
         self.x = self.y = 0
 
-
     def show_tip(self, text, index):
-        if self.tip_window or not text:  # Corrected the condition to use `text` instead of `self.text`
+        if self.tip_window or not text:  # Fix: changed self.text to text
             return
         x, y, width, height = self.widget.bbox(index)
         x += self.widget.winfo_rootx() + 25
@@ -30,7 +29,6 @@ class ToolTip:
                          background="#ffffe0", relief=tk.SOLID,
                          borderwidth=1, font=("tahoma", "8", "normal"))
         label.pack(ipadx=1)
-
 
     def hide_tip(self):
         tw = self.tip_window

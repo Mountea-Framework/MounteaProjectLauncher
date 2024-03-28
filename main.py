@@ -13,6 +13,7 @@ sys.path.append(scripts_dir)
 
 from Scripts.utility import *
 from Scripts.ui_elements import *
+from Scripts.UnrealLauncherApp import UnrealLauncherApp
 
 
 config = read_config(os.path.dirname(os.path.realpath(__file__))) #read_config()

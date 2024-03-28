@@ -4,6 +4,10 @@ import glob
 from pathlib import Path
 
 
+CONFIG_PATH = 'DefaultConfig.json'
+CONFIG_FILE = ""
+
+
 def get_relative_path(root_path, filename):
     # Get the directory of the current script
     script_dir = root_path #.replace('\\', '/')
@@ -25,13 +29,13 @@ def read_config(root_Path):
     :param root_Path: Path to the root folder of this project.
     :return: A dictionary with the configuration data.
     """
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+
     # Construct the absolute path to the configuration file
-    config_path = os.path.join(root_Path, 'DefaultConfig.json') #.replace('\\', '/')
+    config_path = os.path.join(root_Path, CONFIG_PATH)
     try:
         with open(config_path, 'r') as config_file:
-            return json.load(config_file)
+            CONFIG_FILE = json.load(config_file)
+            return CONFIG_FILE
     except Exception as e:
         print(f"Failed to read config file: {e}")
         return {}
@@ -57,7 +61,7 @@ def get_friendly_name(file_path):
     :param file_path: The full path to the file.
     :return: A friendly name for the file.
     """
-    return Path(file_path).stem
+    return os.path.basename(file_path).replace('.umap', '')
 
 
 def save_state_to_json(data, file_path='state.json'):
@@ -136,3 +140,31 @@ def find_umap_files(project_directory):
         maps_with_paths[friendly_name] = unreal_path
     
     return maps_with_paths
+
+
+def has_uproject_file(project_directory):
+    """Checks if the project directory contains a .uproject file."""
+    return bool(find_unreal_project(project_directory))
+    
+    
+def detect_unreal_versions():
+    """Detects installed Unreal Engine versions."""
+    versions_info = {}
+    paths = read_config().get("unreal_engine_paths", [])
+    for path in paths:
+        engine_executables = list(Path(path).glob('*/Engine/Binaries/Win64/UE4Editor.exe'))
+        for executable in engine_executables:
+            build_file_path = executable.parent.parent.parent / 'Build' / 'Build.version'
+            try:
+                with open(build_file_path, 'r') as build_file:
+                    build_data = json.load(build_file)
+                    versions_info[f"{build_data['MajorVersion']}.{build_data['MinorVersion']}"] = str(executable)
+            except (IOError, KeyError):
+                continue
+    return versions_info
+    
+        
+    
+def load_project_uproject_file(project_directory):
+    """Loads the .uproject file from the project directory."""
+    # Implementation here

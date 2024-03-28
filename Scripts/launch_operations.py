@@ -1,25 +1,9 @@
 import subprocess
 import json
+import os
 from pathlib import Path
 
-
-def read_config():
-    try:
-        with open('DefaultConfig.json', 'r') as config_file:
-            return json.load(config_file)
-    except Exception as e:
-        print(f"Failed to read config file: {e}")
-        return {}
-
-# The config file must contains an entry for launch commands in the following formats:
-# "launch_commands": {
-#   "Server": "\"{executable}\" \"{uproject_path}\" {map_path} -server -log",
-#   "Client": "\"{executable}\" \"{uproject_path}\" {map_path}?listen -game -WINDOWED -ResX=1200 -ResY=800 -log",
-#   "Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log"
-# }
-
-
-config = read_config()
+from Scripts.utility import read_config, CONFIG_FILE
 
 
 def construct_command(selected_map, selected_mode, uproject_file, project_directory, unreal_versions_info):
@@ -48,8 +32,16 @@ def construct_command(selected_map, selected_mode, uproject_file, project_direct
         uproject_path=uproject_path,
         map_path=map_path
     )
-    
+        
     return command
+
+
+def update_launch_option(app_instance, mode):
+    """Updates the launch option."""
+    app_instance.launch_options.set(mode)
+    app_instance.update_command_display()
+    app_instance.enable_launch()
+    
 
 
 def execute_command(command):
