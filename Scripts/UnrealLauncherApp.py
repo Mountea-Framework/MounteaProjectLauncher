@@ -59,4 +59,5 @@ class UnrealLauncherApp:
 
 
     def launch_project(self):
-        execute_command(self.command)
+        if (self.command):
+            execute_command(self.command)

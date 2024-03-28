@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog, StringVar
 
-from .utility import find_umap_files, read_config, detect_unreal_versions, find_unreal_project
-from .launch_operations import execute_command
+from .utility import find_umap_files, detect_unreal_versions, find_unreal_project, get_absolute_path
 from .ui_elements import *
 
 
@@ -15,6 +14,8 @@ class UnrealLauncherAppUI:
         self.root = tk.Tk()
         self.root.title("Mountea Project Launcher")
         self.root.geometry("1600x600")
+        path_to_icon = get_absolute_path(os.path.dirname(os.path.realpath(__file__)), "MPLIcon.ico")
+        self.root.iconbitmap(path_to_icon)
         self.root.config(bg="dimgray")
         
         self.launch_options = tk.StringVar()
@@ -36,6 +37,12 @@ class UnrealLauncherAppUI:
         
         
     def on_close(self):
+        # Remove the trace for launch_options
+        #self.launch_options.trace_remove("write", 'update_launch_option')
+        
+        # Remove the trace for selected_version
+        #self.selected_version.trace_remove("write", 'update_engine_version')
+        
         # This method is called when the window is closed
         # Destroy all widgets
         print("Closing the window...")
@@ -45,6 +52,9 @@ class UnrealLauncherAppUI:
         
         # Close the window
         self.root.destroy()
+
+
+
         
     def on_select(self, event=None):
         # Update the selected index when an item is clicked
@@ -59,15 +69,16 @@ class UnrealLauncherAppUI:
         self.update_command_display()
 
 
-    def initialize_ui(self):            
-        if not self.project_directory or not self.has_uproject_file:
-            self.setup_selection_page()
-        else:
-            self.setup_main_page()
+    def initialize_ui(self):
+        if (self.root):            
+            if not self.project_directory or not self.has_uproject_file:
+                self.setup_selection_page()
+            else:
+                self.setup_main_page()
+                
+            self.setup_version_label()
             
-        self.setup_version_label()
-        
-        self.root.mainloop()
+            self.root.mainloop()
         
         
     def destroy_widgets(self):
@@ -139,7 +150,8 @@ class UnrealLauncherAppUI:
             mode_button = tk.Radiobutton(
                 launch_modes_frame, 
                 text=mode, 
-                variable=self.launch_options, 
+                variable=self.launch_options,
+                #command=self.update_launch_option, 
                 value=mode
             )
             mode_button.pack(anchor=tk.W)
@@ -160,12 +172,12 @@ class UnrealLauncherAppUI:
                 engine_versions_frame,
                 text=f"UE {engine_version}",
                 variable=self.selected_version,
+                #command=self.update_engine_version,
                 value=engine_version
             )
             version_button.pack(anchor=tk.W)
             if not first_version_button_created:
                 self.selected_version.set(engine_version)
-                self.app.set_selected_version(self.engine_versions[engine_version][0])
                 first_version_button_created = True
 
         bottom_frame = tk.Frame(main_paned_window, borderwidth=2, relief=tk.SOLID)  
@@ -182,7 +194,7 @@ class UnrealLauncherAppUI:
         launch_button_frame = tk.Frame(bottom_frame)  
         launch_button_frame.pack(side=tk.BOTTOM, fill=tk.X)
         # Configure the Launch button to fill the X-axis in its frame
-        self.launch_button = create_button(launch_button_frame, "Launch", command=execute_command, inputState='disabled')
+        self.launch_button = create_button(launch_button_frame, "Launch", command=self.execute_command, inputState='disabled')
         self.launch_button.pack(fill=tk.X, padx=10, pady=10)          
         
         version_label = tk.Label(bottom_frame, text=self.config.get("version"), font=bold_font) 
@@ -245,21 +257,31 @@ class UnrealLauncherAppUI:
             
             self.update_command_display()
             
+            
+            
+    def enable_launch(self):
+        if hasattr(self, 'launch_button'):
+            if self.app.command:
+                self.launch_button.config(state='normal', borderwidth=2, )
+            else:
+                self.launch_button.config(state='disabled')
+                
+    def execute_command(self):
+        self.app.launch_project()
+            
     
     def update_command_display(self):
         """Update the command display based on the current selections."""
-        selected_map_index = self.maps_listbox.curselection()
-        if selected_map_index:            
+        if self.app.command:            
             self.app.update_command()
-
-            command = self.app.command
-            
+            command = self.app.command            
             if command:
-                self.command_display_var.set(command)
+                self.command_display_var.set(command)                
             else:
                 self.command_display_var.set("Unable to construct command.")
         else:
             self.command_display_var.set("")
+        self.enable_launch()
 
 
 

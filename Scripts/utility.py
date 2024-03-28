@@ -10,15 +10,41 @@ CONFIG_FILE = ""
 
 def get_relative_path(root_path, filename):
     # Get the directory of the current script
-    script_dir = root_path #.replace('\\', '/')
+    script_dir = os.path.abspath(root_path)
     
     # Search for the file recursively in the script directory and its subfolders
     for root, dirs, files in os.walk(script_dir):
         if filename in files:
             # If the file is found, return its relative path
+            return os.path.relpath(os.path.join(root, filename), script_dir)
+    
+    # If the file is not found in the script directory or its subfolders,
+    # move up one directory and search again
+    parent_dir = os.path.dirname(script_dir)
+    if parent_dir != script_dir:
+        return get_relative_path(parent_dir, filename)
+    
+    # If the file is not found in any parent directory, return None
+    return None
+
+
+def get_absolute_path(root_path, filename):
+    # Get the directory of the current script
+    script_dir = os.path.abspath(root_path)
+    
+    # Search for the file recursively in the script directory and its subfolders
+    for root, dirs, files in os.walk(script_dir):
+        if filename in files:
+            # If the file is found, return its absolute path
             return os.path.join(root, filename)
     
-    # If the file is not found in the script directory or its subfolders, return None
+    # If the file is not found in the script directory or its subfolders,
+    # move up one directory and search again
+    parent_dir = os.path.dirname(script_dir)
+    if parent_dir != script_dir:
+        return get_absolute_path(parent_dir, filename)
+    
+    # If the file is not found in any parent directory, return None
     return None
 
 
