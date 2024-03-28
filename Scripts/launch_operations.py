@@ -3,7 +3,8 @@ import json
 import os
 from pathlib import Path
 
-from Scripts.utility import read_config, CONFIG_FILE
+
+from .utility import read_config, CONFIG_FILE
 
 
 def construct_command(selected_map, selected_mode, uproject_file, project_directory, unreal_versions_info):
@@ -43,7 +44,6 @@ def update_launch_option(app_instance, mode):
     app_instance.enable_launch()
     
 
-
 def execute_command(command):
     try:
         # The actual execution of the command can be separated into its own function for clarity
@@ -51,3 +51,4 @@ def execute_command(command):
         print(f"Launched with command: {command}")
     except Exception as e:
         print(f"Failed to execute the command: {e}")
+

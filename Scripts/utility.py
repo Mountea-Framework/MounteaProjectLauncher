@@ -22,20 +22,38 @@ def get_relative_path(root_path, filename):
     return None
 
 
-def read_config(root_Path):
+def find_project_root():
+    """
+    Finds the root folder of the project containing the 'Config' directory.
+    
+    :return: The absolute path to the project's root folder.
+    """
+    current_dir = os.path.abspath(__file__)  # Get the absolute path of the current script
+    while True:
+        # Check if the current directory is indeed a directory
+        if os.path.isdir(current_dir):
+            # Check if the 'Config' directory exists in the current directory
+            if 'Config' in os.listdir(current_dir) and os.path.isdir(os.path.join(current_dir, 'Config')):
+                return current_dir  # Found the root folder
+        # Move up one level in the directory tree
+        parent_dir = os.path.dirname(current_dir)
+        # Stop if reached the system root directory
+        if parent_dir == current_dir:
+            raise FileNotFoundError("Config directory not found. Are you sure this script is inside the project directory?")
+        current_dir = parent_dir
+
+def read_config():
     """
     Reads the configuration from a JSON file.
-
-    :param root_Path: Path to the root folder of this project.
+    
     :return: A dictionary with the configuration data.
     """
-
-    # Construct the absolute path to the configuration file
-    config_path = os.path.join(root_Path, CONFIG_PATH)
+    root_path = find_project_root()
+    config_path = os.path.join(root_path, "Config", CONFIG_PATH)
     try:
         with open(config_path, 'r') as config_file:
-            CONFIG_FILE = json.load(config_file)
-            return CONFIG_FILE
+            config_data = json.load(config_file)
+            return config_data
     except Exception as e:
         print(f"Failed to read config file: {e}")
         return {}
@@ -148,20 +166,25 @@ def has_uproject_file(project_directory):
     
     
 def detect_unreal_versions():
-    """Detects installed Unreal Engine versions."""
+    """Detects installed Unreal Engine versions and their executables."""
     versions_info = {}
     paths = read_config().get("unreal_engine_paths", [])
     for path in paths:
         engine_executables = list(Path(path).glob('*/Engine/Binaries/Win64/UE4Editor.exe'))
+        engine_executables += list(Path(path).glob('*/Engine/Binaries/Win64/UnrealEditor.exe'))
         for executable in engine_executables:
             build_file_path = executable.parent.parent.parent / 'Build' / 'Build.version'
             try:
                 with open(build_file_path, 'r') as build_file:
                     build_data = json.load(build_file)
-                    versions_info[f"{build_data['MajorVersion']}.{build_data['MinorVersion']}"] = str(executable)
+                    version = f"{build_data['MajorVersion']}.{build_data['MinorVersion']}"
+                    if version not in versions_info:
+                        versions_info[version] = []
+                    versions_info[version].append(str(executable))
             except (IOError, KeyError):
                 continue
     return versions_info
+
     
         
     
