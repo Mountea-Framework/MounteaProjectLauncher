@@ -25,13 +25,38 @@ class UnrealLauncherAppUI:
         self.selected_version.trace_add("write", self.update_command_display)
         self.command_display_var = tk.StringVar()
         self.command_display_var.set(self.app.command)
-
+        
+        # Bind a callback to handle window closure
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        
         self.initialize_ui()
+        
+        
+    def on_close(self):
+        # This method is called when the window is closed
+        # Destroy all widgets
+        print("Closing the window...")
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        # Perform any other cleanup tasks
+        
+        # Close the window
+        self.root.destroy()
+        
+    def on_select(self, event=None):
+        # Update the selected index when an item is clicked
+        selection = self.maps_listbox.curselection()
+        if selection:
+            self.selected_index = selection[0]
+        else:  # No selection, e.g., when clicking outside the list items
+            self.selected_index = None
+            
+        self.app.set_selected_map(self.maps_listbox.get(self.selected_index))
 
-        self.root.mainloop()
+        self.update_command_display()
 
 
-    def initialize_ui(self):
+    def initialize_ui(self):            
         if not self.project_directory or not self.has_uproject_file:
             self.setup_selection_page()
         else:
@@ -39,12 +64,20 @@ class UnrealLauncherAppUI:
             
         self.setup_version_label()
         
+        self.root.mainloop()
+        
     def destroy_widgets(self):
-        # Destroy all widgets in the root window
-        for widget in self.root.winfo_children():
-            widget.destroy()
-        
-        
+        try:
+            # Check if the root window exists
+            if self.root.winfo_exists():
+                # Destroy all widgets in the root window
+                for widget in self.root.winfo_children():
+                    widget.destroy()
+        except tk.TclError:
+            # Handle the TclError gracefully (e.g., log the error or ignore it)
+            pass
+
+
     def setup_version_label(self):
         version_text = self.config.get("version")
         self.version_label = tk.Label(self.root, text=f"Version: {version_text}", bg="dimgray")
@@ -85,6 +118,7 @@ class UnrealLauncherAppUI:
         scrollbar = tk.Scrollbar(maps_frame, orient="vertical", command=self.maps_listbox.yview)
         self.maps_listbox.configure(yscrollcommand=scrollbar.set)
         self.maps_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.maps_listbox.bind("<<ListboxSelect>>", self.on_select)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.right_side_frame = tk.Frame(self.upper_paned_window, borderwidth=2, relief=tk.SOLID)  
