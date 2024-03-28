@@ -1,0 +1,7 @@
+# Ignored folders
+build/*
+dist/*
+
+# Ignored files
+*.spec
+*.pyc
