@@ -8,7 +8,7 @@ from .utility import read_config, CONFIG_FILE
 
 
 def construct_command(selected_map, selected_mode, uproject_file, project_directory, unreal_versions_info):
-    if not selected_map or not selected_mode or not uproject_file:
+    if not selected_map or not selected_mode or not uproject_file or not project_directory or not unreal_versions_info:
         print("Missing required parameters to construct the command.")
         return ""
 

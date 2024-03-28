@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog, StringVar
 
-from .utility import find_umap_files, read_config, detect_unreal_versions
+from .utility import find_umap_files, read_config, detect_unreal_versions, find_unreal_project
 from .launch_operations import execute_command
 from .ui_elements import *
 
@@ -21,8 +21,10 @@ class UnrealLauncherAppUI:
         self.tooltip = None
         self.selected_index = None
         self.tooltip_after_id = None
-        self.selected_version = StringVar()
+        self.selected_version = tk.StringVar()
         self.selected_version.trace_add("write", self.update_command_display)
+        self.command_display_var = tk.StringVar()
+        self.command_display_var.set(self.app.command)
 
         self.initialize_ui()
 
@@ -37,6 +39,11 @@ class UnrealLauncherAppUI:
             
         self.setup_version_label()
         
+    def destroy_widgets(self):
+        # Destroy all widgets in the root window
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        
         
     def setup_version_label(self):
         version_text = self.config.get("version")
@@ -45,8 +52,7 @@ class UnrealLauncherAppUI:
 
 
     def setup_selection_page(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
+        self.destroy_widgets()
             
         select_project_folder_label = tk.Label(self.root, text="SELECT PROJECT", font=('Helvetica', 14, 'bold'), bg="dimgray")
         select_project_folder_label.pack(fill=tk.X, expand=False)
@@ -56,8 +62,7 @@ class UnrealLauncherAppUI:
 
 
     def setup_main_page(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
+        self.destroy_widgets()
             
         main_paned_window = tk.PanedWindow(self.root, orient=tk.VERTICAL, bg="dimgray")
         main_paned_window.pack(fill=tk.BOTH, expand=True, pady=10, padx=10)
@@ -192,10 +197,13 @@ class UnrealLauncherAppUI:
         selected_map_index = self.maps_listbox.curselection()
         if selected_map_index:
             selected_map_friendly_name = self.maps_listbox.get(selected_map_index[0])
-            selected_map = self.maps_with_paths.get(selected_map_friendly_name, '')
-            selected_mode = self.launch_options.get()
+            selected_map = self.app.maps_with_paths.get(selected_map_friendly_name, '')
+            selected_mode = self.app.selected_launch
+            
+            self.app.update_command()
 
             command = self.construct_command(selected_map, selected_mode)
+            
             if command:
                 self.command_display_var.set(command)
             else:
@@ -211,6 +219,7 @@ class UnrealLauncherAppUI:
             self.project_directory = folder_path
             self.has_uproject_file = True
             self.app.set_project_directory(folder_path)
+            self.app.set_selected_project_file(find_unreal_project(folder_path))
             
             self.initialize_ui()
         else:
