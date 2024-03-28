@@ -13,10 +13,10 @@ def construct_command(selected_map, selected_mode, uproject_file, project_direct
         return ""
 
     # Retrieve the full path to the selected Unreal Engine version's editor executable
-    editor_executable = unreal_versions_info.get(selected_mode)
+    editor_executable = unreal_versions_info
 
     # Check if we have a launch command format for the selected mode
-    launch_command_format = config.get("launch_commands", {}).get(selected_mode)
+    launch_command_format = read_config().get("launch_commands", {}).get(selected_mode)
     if not launch_command_format:
         print(f"Error: Launch command format for {selected_mode} not found in the config.")
         return ""

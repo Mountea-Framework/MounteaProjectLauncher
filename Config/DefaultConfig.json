@@ -4,9 +4,9 @@
       "D:/Program Files/Epic Games"
     ],
     "launch_commands": {
-      "Server": "\"{executable}\" \"{uproject_path}\" {map_path} -server -log",
-      "Client": "\"{executable}\" \"{uproject_path}\" {map_path}?listen -game -WINDOWED -ResX=1200 -ResY=800 -log",
-      "Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log"
+      "Server": "\"{executable}\" \"{uproject_path}\" {map_path}?listen -server -log",
+      "Client": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log",
+      "Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1600 -ResY=900 -log"
     },
     "version": "0.0.0.4",
     "GUI": true

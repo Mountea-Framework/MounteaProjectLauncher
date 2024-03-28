@@ -17,12 +17,15 @@ class UnrealLauncherAppUI:
         self.root.geometry("1600x600")
         self.root.config(bg="dimgray")
         
-        self.launch_options = StringVar(value=self.app.selected_launch)
+        self.launch_options = tk.StringVar()
+        self.launch_options.trace_add("write", self.update_launch_option)
+        self.selected_version = tk.StringVar()
+        self.selected_version.trace_add("write", self.update_engine_version)
+        
         self.tooltip = None
         self.selected_index = None
         self.tooltip_after_id = None
-        self.selected_version = tk.StringVar()
-        self.selected_version.trace_add("write", self.update_command_display)
+        
         self.command_display_var = tk.StringVar()
         self.command_display_var.set(self.app.command)
         
@@ -51,7 +54,7 @@ class UnrealLauncherAppUI:
         else:  # No selection, e.g., when clicking outside the list items
             self.selected_index = None
             
-        self.app.set_selected_map(self.maps_listbox.get(self.selected_index))
+        self.app.set_selected_map(self.app.maps_with_paths[self.maps_listbox.get(self.selected_index)])
 
         self.update_command_display()
 
@@ -65,6 +68,7 @@ class UnrealLauncherAppUI:
         self.setup_version_label()
         
         self.root.mainloop()
+        
         
     def destroy_widgets(self):
         try:
@@ -128,22 +132,19 @@ class UnrealLauncherAppUI:
         launch_modes_label = tk.Label(self.right_side_frame, text="LAUNCH MODES", font=bold_font)
         launch_modes_label.pack(fill=tk.BOTH, expand=False)
         launch_modes_frame.pack(fill=tk.BOTH, expand=True)
-        launch_modes = self.config.get("launch_commands", {}).keys()
+        self.launch_modes = self.config.get("launch_commands", {})
         
         first_button_created = False
-        
-        for mode in launch_modes:
+        for mode in self.launch_modes:
             mode_button = tk.Radiobutton(
                 launch_modes_frame, 
                 text=mode, 
                 variable=self.launch_options, 
-                value=mode, 
-                command=self.update_command_display
+                value=mode
             )
             mode_button.pack(anchor=tk.W)
             if not first_button_created:
                 self.launch_options.set(mode)
-                self.app.set_selected_launch(mode)
                 first_button_created = True
 
         engine_versions_frame = tk.Frame(self.right_side_frame)
@@ -152,19 +153,19 @@ class UnrealLauncherAppUI:
         engine_versions_label.pack(fill=tk.BOTH, expand=False)
         
         first_version_button_created = False
+        self.engine_versions = detect_unreal_versions()
         
-        for engine_version in detect_unreal_versions():
+        for engine_version in self.engine_versions:
             version_button = tk.Radiobutton(
                 engine_versions_frame,
                 text=f"UE {engine_version}",
                 variable=self.selected_version,
-                value=engine_version,
-                command=self.update_command_display
+                value=engine_version
             )
             version_button.pack(anchor=tk.W)
             if not first_version_button_created:
                 self.selected_version.set(engine_version)
-                self.app.set_selected_version(engine_version)
+                self.app.set_selected_version(self.engine_versions[engine_version][0])
                 first_version_button_created = True
 
         bottom_frame = tk.Frame(main_paned_window, borderwidth=2, relief=tk.SOLID)  
@@ -225,18 +226,33 @@ class UnrealLauncherAppUI:
             tk.Radiobutton(right_side_frame, text=mode, variable=tk.StringVar(value="Standalone"), value=mode,
                            command=self.update_command_display).pack(anchor=tk.W)
             
+            
+    def update_launch_option(self, arg1, arg2, arg3):
+        selected_option = self.launch_options.get()
+        
+        if (selected_option):
+            self.app.set_selected_launch(selected_option)
+            
+            self.update_command_display()        
+            
+            
+    def update_engine_version(self, arg1, arg2, arg3):
+        selected_version = self.selected_version.get()
+        version_data = self.engine_versions.get(selected_version)
+        
+        if version_data:
+            self.app.set_selected_version(version_data[0])
+            
+            self.update_command_display()
+            
     
-    def update_command_display(self, *args):
+    def update_command_display(self):
         """Update the command display based on the current selections."""
         selected_map_index = self.maps_listbox.curselection()
-        if selected_map_index:
-            selected_map_friendly_name = self.maps_listbox.get(selected_map_index[0])
-            selected_map = self.app.maps_with_paths.get(selected_map_friendly_name, '')
-            selected_mode = self.app.selected_launch
-            
+        if selected_map_index:            
             self.app.update_command()
 
-            command = self.construct_command(selected_map, selected_mode)
+            command = self.app.command
             
             if command:
                 self.command_display_var.set(command)
