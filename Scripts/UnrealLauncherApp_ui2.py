@@ -5,7 +5,42 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushBu
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
 
-from .utility import find_umap_files
+from .utility import (find_umap_files, find_unreal_project)
+
+primary_button_style = """
+    QPushButton {
+        color: white;
+        background-color: blue;
+        border: none;
+        font-family: Roboto;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    QPushButton:hover {
+        background-color: #3651ea;
+    }
+    
+    QPushButton:disabled {
+        background-color: #b8b9bf;
+        color: gray;
+    }
+"""
+
+secondary_button_style = """
+    QPushButton {
+        color: blue;
+        border: none;
+        font-family: Roboto;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: right;
+    }
+    
+    QPushButton:hover {
+        color: #3651ea;
+    }
+"""
 
 
 class Launcher(QWidget):
@@ -80,9 +115,9 @@ class Launcher(QWidget):
 
 
         # Left side (aligned to the left)
-        left_label = QLabel("Open Project Folder")
-        left_label.setFont(QFont("Roboto", 10))
-        button_layout.addWidget(left_label, alignment=Qt.AlignLeft)
+        self.left_label = QLabel("Open Project Folder")
+        self.left_label.setFont(QFont("Roboto", 10))
+        button_layout.addWidget(self.left_label, alignment=Qt.AlignLeft)
 
         # Spacer to push ">" to the right
         button_layout.addStretch()
@@ -94,7 +129,7 @@ class Launcher(QWidget):
 
         # Set styling for the button
         self.project_name_btn.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
-        self.project_name_btn.setFixedHeight(40)
+        self.project_name_btn.setFixedHeight(50)
         self.project_name_btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         # Connect button click signal
@@ -124,7 +159,7 @@ class Launcher(QWidget):
         maps_title = QLabel("Maps")
         maps_title.setFont(QFont("Roboto", 12, QFont.Bold))
         reload_maps_btn = QPushButton("Reload maps")
-        reload_maps_btn.setStyleSheet("text-align: right; color: blue; border: none; font-family: Roboto; font-size: 12px; font-weight: bold;")
+        reload_maps_btn.setStyleSheet(secondary_button_style)
         maps_title_layout.addWidget(maps_title)
         maps_title_layout.addWidget(reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
@@ -135,46 +170,50 @@ class Launcher(QWidget):
         self.wrapper_layout.addWidget(maps_list)
 
         # Launch mode and version selection
+        comb_spacer = QWidget()
+        comb_spacer.setFixedWidth(5)     
+        
         launch_mode_combo = QComboBox()
         launch_mode_combo.addItems(["Server", "Client", "Standalone"])
         launch_mode_combo.setStyleSheet(combo_style)
-        launch_mode_combo.setFixedHeight(40)
+        launch_mode_combo.setFixedHeight(50)
 
         unreal_combo = QComboBox()
         unreal_combo.addItems(["Unreal Engine 4.25", "Unreal Engine 4.26", "Unreal Engine 5.0"])
         unreal_combo.setStyleSheet(combo_style)
-        unreal_combo.setFixedHeight(40)
+        unreal_combo.setFixedHeight(50)
 
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(launch_mode_combo)
+        combo_layout.addWidget(comb_spacer)
         combo_layout.addWidget(unreal_combo)
         self.wrapper_layout.addLayout(combo_layout)
 
         # Path and Copy
         path_layout = QHBoxLayout()
-        path_edit = QLineEdit("C:/...")
+        path_edit = QLineEdit("")
         path_edit.setReadOnly(True)
         path_layout.addWidget(path_edit)
         path_edit.setStyleSheet("border: none; padding-left: 5px; padding-right: 5px;")
-        path_edit.setFixedHeight(40)
+        path_edit.setFixedHeight(50)
 
         copy_button = QPushButton("Copy")
-        copy_button.setStyleSheet("color: blue; border: none;")
+        copy_button.setStyleSheet(secondary_button_style)
         path_layout.addWidget(copy_button)
 
         self.wrapper_layout.addLayout(path_layout)
 
         # Launch project button
-        launch_project_btn = QPushButton("Launch project")
-        launch_project_btn.setStyleSheet("color: white; background-color: blue; border: none; font-family: Roboto; font-size: 14px; font-weight: bold;")
+        self.launch_project_btn = QPushButton("Launch project")
+        self.launch_project_btn.setStyleSheet(primary_button_style)
+        self.launch_project_btn.setDisabled(True)
 
-        launch_project_btn.setFixedHeight(40)
-        self.wrapper_layout.addWidget(launch_project_btn)
+        self.launch_project_btn.setFixedHeight(50)
+        self.wrapper_layout.addWidget(self.launch_project_btn)
 
         # Set the layout on the application's window
         self.setLayout(layout)
         self.setGeometry(100, 100, 500, 500)
-
 
     def openFileNameDialog(self):
         options = QFileDialog.Options()
@@ -189,6 +228,11 @@ class Launcher(QWidget):
                 self.setGeometry(100, 100, 500, 500)
                 
                 self.app.set_project_directory(folder)
+                self.app.set_selected_project_file(find_unreal_project(folder))
+
+                folder_name = os.path.basename(folder)
+                self.left_label.setText(f"{folder_name} Folder")
+                self.project_name_btn.setDisabled(True)
             else:
                 QMessageBox.critical(self, "Error", "Invalid folder path selected.")
         else:
