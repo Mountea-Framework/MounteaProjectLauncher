@@ -1,17 +1,18 @@
 import sys
 import os
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, 
-                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy)
+                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
 
-
-
+from .utility import find_umap_files
 
 
 class Launcher(QWidget):
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
+        
+        self.app = app
 
         # Main layout
         layout = QVBoxLayout()
@@ -174,20 +175,33 @@ class Launcher(QWidget):
         self.setLayout(layout)
         self.setGeometry(100, 100, 500, 500)
 
+
     def openFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
-        print(folder)  # This is where you would handle the selected folder path
+        if folder:
+            if find_umap_files(folder):
+                # Save the folder path
+                self.folder_path = folder
+                # Show the wrapper
+                self.wrapper.setVisible(True)
+                self.setGeometry(100, 100, 500, 500)
+                
+                self.app.set_project_directory(folder)
+            else:
+                QMessageBox.critical(self, "Error", "Invalid folder path selected.")
+        else:
+            QMessageBox.information(self, "Info", "Folder selection canceled.")
 
-        # Show the wrapper
-        self.wrapper.setVisible(True)
-        self.setGeometry(100, 100, 500, 500)
 
+class LauncherApp(QApplication):
+    def __init__(self, parent, argv):
+        super().__init__(argv)
+        self.parent = parent
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = Launcher()
-    window.setWindowTitle("Mountea Project Launcher")
-    window.show()
-    sys.exit(app.exec_())
+    def start(self):
+        self.launcher = Launcher(self.parent)
+        self.launcher.setWindowTitle("Mountea Project Launcher")
+        self.launcher.show()
+        sys.exit(self.exec_())

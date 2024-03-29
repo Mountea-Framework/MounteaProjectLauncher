@@ -1,6 +1,8 @@
+import sys
+
 from .utility import has_uproject_file, read_config
 from .launch_operations import execute_command, construct_command
-from .UnrealLauncherApp_ui import UnrealLauncherAppUI
+from .UnrealLauncherApp_ui2 import LauncherApp
 
 
 class UnrealLauncherApp:
@@ -18,8 +20,8 @@ class UnrealLauncherApp:
 
 
     def initialize_ui(self):
-        ui = UnrealLauncherAppUI(self, self, has_uproject_file(self.project_directory), self.config)
-        ui.initialize_ui()
+        ui = LauncherApp(self, sys.argv)
+        ui.start()
 
 
     def set_selected_version(self, version):

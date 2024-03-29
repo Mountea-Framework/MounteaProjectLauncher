@@ -53,7 +53,6 @@ class UnrealLauncherAppUI:
         # Close the window
         self.root.destroy()
 
-
         
     def on_select(self, event=None):
         # Update the selected index when an item is clicked
@@ -255,14 +254,14 @@ class UnrealLauncherAppUI:
             
             self.update_command_display()
             
-            
-            
+                        
     def enable_launch(self):
         if hasattr(self, 'launch_button'):
             if self.app.command:
                 self.launch_button.config(state='normal', borderwidth=2, )
             else:
                 self.launch_button.config(state='disabled')
+                
                 
     def execute_command(self):
         self.app.launch_project()
@@ -280,7 +279,6 @@ class UnrealLauncherAppUI:
         else:
             self.command_display_var.set("")
         self.enable_launch()
-
 
 
     def select_project_folder(self):
