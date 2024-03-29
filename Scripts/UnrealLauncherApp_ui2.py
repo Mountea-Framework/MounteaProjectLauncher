@@ -47,6 +47,7 @@ class Launcher(QWidget):
                 image: url(%s);
                 width: 14px;
                 height: 14px;
+                padding: 0px 10px 0px 0px;
             }
         """ % chevron_down_path
 
@@ -54,22 +55,33 @@ class Launcher(QWidget):
         self.setWindowIcon(QIcon(icon_path))
 
 
+        # Title and Project Name Wrapper
+        title_wrapper = QWidget()
+        title_layout = QVBoxLayout(title_wrapper)
+        title_layout.setAlignment(Qt.AlignTop)
+
         # Title
         title = QLabel("Mountea Project Launcher")
         title.setAlignment(Qt.AlignCenter)
-        title.setFont(QFont("Arial", 16, QFont.Bold))
-        layout.addWidget(title)
-
-
+        title.setFont(QFont("Roboto", 16, QFont.Bold))
+        title_layout.addWidget(title)
+        
+        
+        # Small spacer
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        title_layout.addWidget(spacer)
 
         # Project name file browser
         self.project_name_btn = QPushButton()
-        button_layout = QHBoxLayout(self.project_name_btn)
+        button_layout = QHBoxLayout()
+        self.project_name_btn.setLayout(button_layout)
+
 
         # Left side (aligned to the left)
         left_label = QLabel("Open Project Folder")
         left_label.setFont(QFont("Roboto", 10))
-        button_layout.addWidget(left_label)
+        button_layout.addWidget(left_label, alignment=Qt.AlignLeft)
 
         # Spacer to push ">" to the right
         button_layout.addStretch()
@@ -77,31 +89,34 @@ class Launcher(QWidget):
         # Right side (aligned to the right)
         icon_label = QLabel()
         icon_label.setPixmap(QIcon(chevron_right_path).pixmap(16, 16))  # Adjust the size as needed
-        button_layout.addWidget(icon_label)
+        button_layout.addWidget(icon_label, alignment=Qt.AlignRight)
 
         # Set styling for the button
         self.project_name_btn.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
         self.project_name_btn.setFixedHeight(40)
+        self.project_name_btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         # Connect button click signal
         self.project_name_btn.clicked.connect(self.openFileNameDialog)
 
-        layout.addWidget(self.project_name_btn)
+        title_layout.addWidget(self.project_name_btn)
 
-
-
-
+        layout.addWidget(title_wrapper)
+          
+          
         # Wrapper for widgets below the divider
         self.wrapper = QWidget()
         self.wrapper_layout = QVBoxLayout(self.wrapper)
         self.wrapper.setVisible(False)
         layout.addWidget(self.wrapper)
 
+        
         # Divider line
         divider = QLabel()
         divider.setFrameShape(QLabel.HLine)
         divider.setFrameShadow(QLabel.Sunken)
         self.wrapper_layout.addWidget(divider)
+        
 
         # Maps title and Reload maps button
         maps_title_layout = QHBoxLayout()
@@ -157,7 +172,7 @@ class Launcher(QWidget):
 
         # Set the layout on the application's window
         self.setLayout(layout)
-        self.setGeometry(100, 100, 500, 200)
+        self.setGeometry(100, 100, 500, 500)
 
     def openFileNameDialog(self):
         options = QFileDialog.Options()
@@ -168,6 +183,7 @@ class Launcher(QWidget):
         # Show the wrapper
         self.wrapper.setVisible(True)
         self.setGeometry(100, 100, 500, 500)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
