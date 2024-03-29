@@ -52,6 +52,15 @@ class UnrealLauncherApp:
     def set_config(self, config):
         self.config = config
         self.update_command()
+        
+        
+    def reset_selection(self):
+        self.maps_with_paths = {}
+        self.selected_launch = ""
+        self.selected_version = ""
+        self.project_directory = ""
+        self.selected_project_file = ""
+        self.selected_map = ""
 
 
     def update_command(self):

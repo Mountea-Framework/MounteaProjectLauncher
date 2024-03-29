@@ -7,6 +7,7 @@ from PyQt5.QtGui import QFont, QIcon
 
 from .utility import (find_umap_files, find_unreal_project, detect_unreal_versions)
 
+
 primary_button_style = """
     QPushButton {
         color: white;
@@ -26,6 +27,7 @@ primary_button_style = """
         color: gray;
     }
 """
+
 
 secondary_button_style = """
     QPushButton {
@@ -52,6 +54,7 @@ class Launcher(QWidget):
         super().__init__()
         
         self.app = app
+        self.setStyleSheet("background: #eaebef;")
 
         # Main layout
         layout = QVBoxLayout()
@@ -73,6 +76,7 @@ class Launcher(QWidget):
 
         combo_style = """
             QComboBox {
+                background: white;
                 color: black;
                 font: 14px;
                 padding: 0px 10px 0px 10px;
@@ -135,9 +139,7 @@ class Launcher(QWidget):
         self.project_name_btn.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
         self.project_name_btn.setFixedHeight(50)
         self.project_name_btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-
-        # Connect button click signal
-        self.project_name_btn.clicked.connect(self.openFileNameDialog)
+        self.project_name_btn.clicked.connect(self.open_file_dialogue)
 
         title_layout.addWidget(self.project_name_btn)
 
@@ -155,6 +157,7 @@ class Launcher(QWidget):
         divider = QLabel()
         divider.setFrameShape(QLabel.HLine)
         divider.setFrameShadow(QLabel.Sunken)
+        divider.setStyleSheet("color: #dcdde1;")
         self.wrapper_layout.addWidget(divider)
         
 
@@ -162,10 +165,11 @@ class Launcher(QWidget):
         maps_title_layout = QHBoxLayout()
         maps_title = QLabel("Maps")
         maps_title.setFont(QFont("Roboto", 12, QFont.Bold))
-        reload_maps_btn = QPushButton("Reload maps")
-        reload_maps_btn.setStyleSheet(secondary_button_style)
+        self.reload_maps_btn = QPushButton("Reload maps")
+        self.reload_maps_btn.setStyleSheet(secondary_button_style)
+        self.reload_maps_btn.clicked.connect(self.load_maps)
         maps_title_layout.addWidget(maps_title)
-        maps_title_layout.addWidget(reload_maps_btn)
+        maps_title_layout.addWidget(self.reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
         
         # Vertical slicer
@@ -174,9 +178,10 @@ class Launcher(QWidget):
         self.wrapper_layout.addWidget(maps_spacer)
 
         # Maps list
-        maps_list = QListWidget()
-        maps_list.setStyleSheet("border: none;")
-        self.wrapper_layout.addWidget(maps_list)        
+        self.maps_list = QListWidget()
+        self.maps_list.setStyleSheet("background: white; border: none;")
+        self.maps_list.itemSelectionChanged.connect(self.handle_selection_change)
+        self.wrapper_layout.addWidget(self.maps_list)        
         
         # Vertical slicer
         maps_spacer2 = QWidget()
@@ -192,14 +197,14 @@ class Launcher(QWidget):
         self.launch_mode_combo.addItems(self.launch_modes)
         self.launch_mode_combo.setStyleSheet(combo_style)
         self.launch_mode_combo.setFixedHeight(50)
-        self.launch_mode_combo.currentIndexChanged.connect(self.launchModeChanged)
+        self.launch_mode_combo.currentIndexChanged.connect(self.launch_mode_changed)
 
         self.unreal_versions = detect_unreal_versions()
         self.unreal_combo = QComboBox()
         self.unreal_combo.addItems(self.unreal_versions)
         self.unreal_combo.setStyleSheet(combo_style)
         self.unreal_combo.setFixedHeight(50)
-        self.unreal_combo.currentIndexChanged.connect(self.engineVersionChanged)
+        self.unreal_combo.currentIndexChanged.connect(self.engine_version_changed)
 
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(self.launch_mode_combo)
@@ -214,14 +219,15 @@ class Launcher(QWidget):
 
         # Path and Copy
         path_layout = QHBoxLayout()
-        path_edit = QLineEdit("")
-        path_edit.setReadOnly(True)
-        path_layout.addWidget(path_edit)
-        path_edit.setStyleSheet("border: none; padding-left: 5px; padding-right: 5px;")
-        path_edit.setFixedHeight(50)
+        self.path_edit = QLineEdit("")
+        self.path_edit.setReadOnly(True)
+        path_layout.addWidget(self.path_edit)
+        self.path_edit.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
+        self.path_edit.setFixedHeight(50)
 
         copy_button = QPushButton("Copy")
         copy_button.setStyleSheet(secondary_button_style)
+        copy_button.clicked.connect(self.copy_command)
         path_layout.addWidget(copy_button)
 
         self.wrapper_layout.addLayout(path_layout)
@@ -237,23 +243,25 @@ class Launcher(QWidget):
         self.launch_project_btn.setDisabled(True)
 
         self.launch_project_btn.setFixedHeight(50)
+        self.launch_project_btn.clicked.connect(self.launch_project)
         self.wrapper_layout.addWidget(self.launch_project_btn)
 
         # Set the layout on the application's window
         self.setLayout(layout)
-        self.setGeometry(100, 100, 500, 500)
+        self.setGeometry(100, 100, 550, 700)
 
-    def openFileNameDialog(self):
+    def open_file_dialogue(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
         if folder:
             if find_umap_files(folder):
+                self.app.reset_selection()
                 # Save the folder path
                 self.folder_path = folder
                 # Show the wrapper
                 self.wrapper.setVisible(True)
-                self.setGeometry(100, 100, 500, 500)
+                self.setGeometry(100, 100, 550, 700)
                 
                 self.app.set_project_directory(folder)
                 self.app.set_selected_project_file(find_unreal_project(folder))
@@ -261,20 +269,70 @@ class Launcher(QWidget):
                 folder_name = os.path.basename(folder)
                 self.left_label.setText(f"{folder_name} Folder")
                 self.project_name_btn.setDisabled(True)
+                
+                self.launch_mode_changed()
+                self.engine_version_changed()
+                self.load_maps()
             else:
                 QMessageBox.critical(self, "Error", "Invalid folder path selected.")
         else:
             QMessageBox.information(self, "Info", "Folder selection canceled.")
             
+    
+    def copy_command(self):
+        if self.app.command:
+            clipboard = QApplication.clipboard()
+            clipboard.clear()
+            clipboard.setText(self.app.command)
+            QMessageBox.information(self, "Info", "Command copied to clipboard")
+        else:
+            QMessageBox.information(self, "Info", "Command is not yet valid")
             
-    def launchModeChanged(self):
+            
+    def load_maps(self):
+        self.app.maps_with_paths = find_umap_files(self.app.project_directory)
+        self.maps_list.clear()
+        for friendly_name in self.app.maps_with_paths:
+            self.maps_list.addItem(friendly_name)
+            
+            
+    def launch_mode_changed(self):
         selected_mode = self.launch_mode_combo.currentText()
         self.app.set_selected_launch(selected_mode)
+        self.update_ui()
 
 
-    def engineVersionChanged(self):
+    def engine_version_changed(self):
         selected_engine = self.unreal_combo.currentText()
-        print(f"Engine Version has Changed. New value: ", selected_engine)
+        selected_version = self.unreal_versions.get(selected_engine)[0]
+        self.app.set_selected_version(selected_version)
+        self.update_ui()
+                 
+            
+    def handle_selection_change(self):
+        selected_items = self.maps_list.selectedItems()
+        if selected_items:
+            selected_item = selected_items[0]
+            selected_map_path = self.app.maps_with_paths[selected_item.text()]
+            self.app.set_selected_map(selected_map_path)
+            self.update_ui()
+            
+            
+    def update_ui(self):
+        if self.app.command:
+            self.path_edit.setText(self.app.command)
+            self.enable_launch_button()
+            
+            
+    def enable_launch_button(self):
+        if self.app.command:
+            self.launch_project_btn.setDisabled(False)
+            
+            
+    def launch_project(self):
+        if self.app.command:
+            self.app.launch_project()
+
         
 
 class LauncherApp(QApplication):
