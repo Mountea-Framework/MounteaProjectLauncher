@@ -5,12 +5,12 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushBu
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QIcon
 
-from .utility import (find_umap_files, find_unreal_project)
+from .utility import (find_umap_files, find_unreal_project, detect_unreal_versions)
 
 primary_button_style = """
     QPushButton {
         color: white;
-        background-color: blue;
+        background-color: #3651ea;
         border: none;
         font-family: Roboto;
         font-size: 14px;
@@ -18,7 +18,7 @@ primary_button_style = """
     }
     
     QPushButton:hover {
-        background-color: #3651ea;
+        background-color: blue;        
     }
     
     QPushButton:disabled {
@@ -29,16 +29,20 @@ primary_button_style = """
 
 secondary_button_style = """
     QPushButton {
-        color: blue;
+        color: #3651ea;
         border: none;
         font-family: Roboto;
         font-size: 12px;
-        font-weight: bold;
         text-align: right;
+        font-weight: bold;
     }
     
     QPushButton:hover {
-        color: #3651ea;
+        color: blue;
+    }
+    
+    QPushButton:disabled {
+        color: #b8b9bf;
     }
 """
 
@@ -163,31 +167,50 @@ class Launcher(QWidget):
         maps_title_layout.addWidget(maps_title)
         maps_title_layout.addWidget(reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
+        
+        # Vertical slicer
+        maps_spacer = QWidget()
+        maps_spacer.setFixedHeight(2)
+        self.wrapper_layout.addWidget(maps_spacer)
 
         # Maps list
         maps_list = QListWidget()
         maps_list.setStyleSheet("border: none;")
-        self.wrapper_layout.addWidget(maps_list)
+        self.wrapper_layout.addWidget(maps_list)        
+        
+        # Vertical slicer
+        maps_spacer2 = QWidget()
+        maps_spacer2.setFixedHeight(2)
+        self.wrapper_layout.addWidget(maps_spacer2)
 
         # Launch mode and version selection
         comb_spacer = QWidget()
-        comb_spacer.setFixedWidth(5)     
+        comb_spacer.setFixedWidth(2)     
         
-        launch_mode_combo = QComboBox()
-        launch_mode_combo.addItems(["Server", "Client", "Standalone"])
-        launch_mode_combo.setStyleSheet(combo_style)
-        launch_mode_combo.setFixedHeight(50)
+        self.launch_modes = self.app.config.get("launch_commands", {})
+        self.launch_mode_combo = QComboBox()
+        self.launch_mode_combo.addItems(self.launch_modes)
+        self.launch_mode_combo.setStyleSheet(combo_style)
+        self.launch_mode_combo.setFixedHeight(50)
+        self.launch_mode_combo.currentIndexChanged.connect(self.launchModeChanged)
 
-        unreal_combo = QComboBox()
-        unreal_combo.addItems(["Unreal Engine 4.25", "Unreal Engine 4.26", "Unreal Engine 5.0"])
-        unreal_combo.setStyleSheet(combo_style)
-        unreal_combo.setFixedHeight(50)
+        self.unreal_versions = detect_unreal_versions()
+        self.unreal_combo = QComboBox()
+        self.unreal_combo.addItems(self.unreal_versions)
+        self.unreal_combo.setStyleSheet(combo_style)
+        self.unreal_combo.setFixedHeight(50)
+        self.unreal_combo.currentIndexChanged.connect(self.engineVersionChanged)
 
         combo_layout = QHBoxLayout()
-        combo_layout.addWidget(launch_mode_combo)
+        combo_layout.addWidget(self.launch_mode_combo)
         combo_layout.addWidget(comb_spacer)
-        combo_layout.addWidget(unreal_combo)
+        combo_layout.addWidget(self.unreal_combo)
         self.wrapper_layout.addLayout(combo_layout)
+        
+        # Vertical slicer
+        comb_spacer2 = QWidget()
+        comb_spacer2.setFixedHeight(2)
+        self.wrapper_layout.addWidget(comb_spacer2)
 
         # Path and Copy
         path_layout = QHBoxLayout()
@@ -202,6 +225,11 @@ class Launcher(QWidget):
         path_layout.addWidget(copy_button)
 
         self.wrapper_layout.addLayout(path_layout)
+        
+        # Vertical slicer
+        path_spacer = QWidget()
+        path_spacer.setFixedHeight(2)
+        self.wrapper_layout.addWidget(path_spacer)
 
         # Launch project button
         self.launch_project_btn = QPushButton("Launch project")
@@ -237,7 +265,17 @@ class Launcher(QWidget):
                 QMessageBox.critical(self, "Error", "Invalid folder path selected.")
         else:
             QMessageBox.information(self, "Info", "Folder selection canceled.")
+            
+            
+    def launchModeChanged(self):
+        selected_mode = self.launch_mode_combo.currentText()
+        self.app.set_selected_launch(selected_mode)
 
+
+    def engineVersionChanged(self):
+        selected_engine = self.unreal_combo.currentText()
+        print(f"Engine Version has Changed. New value: ", selected_engine)
+        
 
 class LauncherApp(QApplication):
     def __init__(self, parent, argv):
