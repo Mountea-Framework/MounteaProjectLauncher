@@ -139,6 +139,7 @@ class Launcher(QWidget):
         self.project_name_btn.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
         self.project_name_btn.setFixedHeight(50)
         self.project_name_btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.project_name_btn.setToolTip("Open Project folder (must be Unreal Engine project folder)")
         self.project_name_btn.clicked.connect(self.open_file_dialogue)
 
         title_layout.addWidget(self.project_name_btn)
@@ -168,6 +169,7 @@ class Launcher(QWidget):
         self.reload_maps_btn = QPushButton("Reload maps")
         self.reload_maps_btn.setStyleSheet(secondary_button_style)
         self.reload_maps_btn.clicked.connect(self.load_maps)
+        self.reload_maps_btn.setToolTip("Reloads all Maps within selected Project Folder\nResets selection and thus reseting command")
         maps_title_layout.addWidget(maps_title)
         maps_title_layout.addWidget(self.reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
@@ -228,6 +230,7 @@ class Launcher(QWidget):
         copy_button = QPushButton("Copy")
         copy_button.setStyleSheet(secondary_button_style)
         copy_button.clicked.connect(self.copy_command)
+        copy_button.setToolTip("Will copy generated command to clipboard\nKeep in mind that this will replace last active item in your clipboard")
         path_layout.addWidget(copy_button)
 
         self.wrapper_layout.addLayout(path_layout)
@@ -241,6 +244,7 @@ class Launcher(QWidget):
         self.launch_project_btn = QPushButton("Launch project")
         self.launch_project_btn.setStyleSheet(primary_button_style)
         self.launch_project_btn.setDisabled(True)
+        self.launch_project_btn.setToolTip("To enable Launch Project you need to select Map, Launch Mode and Engine Version")
 
         self.launch_project_btn.setFixedHeight(50)
         self.launch_project_btn.clicked.connect(self.launch_project)
@@ -267,8 +271,7 @@ class Launcher(QWidget):
                 self.app.set_selected_project_file(find_unreal_project(folder))
 
                 folder_name = os.path.basename(folder)
-                self.left_label.setText(f"{folder_name} Folder")
-                self.project_name_btn.setDisabled(True)
+                self.left_label.setText(f"{folder_name} Folder | Select different project")
                 
                 self.launch_mode_changed()
                 self.engine_version_changed()
@@ -294,6 +297,8 @@ class Launcher(QWidget):
         self.maps_list.clear()
         for friendly_name in self.app.maps_with_paths:
             self.maps_list.addItem(friendly_name)
+        self.app.set_selected_map("")
+        self.update_ui()
             
             
     def launch_mode_changed(self):
@@ -321,12 +326,18 @@ class Launcher(QWidget):
     def update_ui(self):
         if self.app.command:
             self.path_edit.setText(self.app.command)
-            self.enable_launch_button()
+        else:
+            self.path_edit.setText("")
+        self.enable_launch_button()
             
             
     def enable_launch_button(self):
         if self.app.command:
             self.launch_project_btn.setDisabled(False)
+            self.launch_project_btn.setToolTip("Will execute command and if your selection is valid, then it will launch a project")
+        else:
+            self.launch_project_btn.setDisabled(True)
+            self.launch_project_btn.setToolTip("To enable Launch Project you need to select Map, Launch Mode and Engine Version")
             
             
     def launch_project(self):
