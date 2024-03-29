@@ -1,8 +1,13 @@
 import sys
+import os
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, 
-                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget)
+                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QIcon
+
+
+
+
 
 class Launcher(QWidget):
     def __init__(self):
@@ -10,6 +15,44 @@ class Launcher(QWidget):
 
         # Main layout
         layout = QVBoxLayout()
+        
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
+        
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+
+        # Icon filename
+        icon_filename = "MPLIcon.png"
+        chevron_right_filename = "icon_chevron_right.png"
+        chevron_down_filename = "icon_chevron_down.png"
+        
+        # Icons path
+        icon_path = os.path.join(script_dir, "..", "Icons", icon_filename).replace("\\", "/")
+        chevron_right_path = os.path.join(script_dir, "..", "Icons", chevron_right_filename).replace("\\", "/")
+        chevron_down_path = os.path.join(script_dir, "..", "Icons", chevron_down_filename).replace("\\", "/")
+
+
+        combo_style = """
+            QComboBox {
+                color: black;
+                font: 14px;
+                padding: 0px 10px 0px 10px;
+                border: none
+            }
+            
+            QComboBox::drop-down {
+                border: none;
+            }
+            
+            QComboBox::down-arrow {
+                image: url(%s);
+                width: 14px;
+                height: 14px;
+            }
+        """ % chevron_down_path
+
+        # Set window icon
+        self.setWindowIcon(QIcon(icon_path))
+
 
         # Title
         title = QLabel("Mountea Project Launcher")
@@ -17,12 +60,36 @@ class Launcher(QWidget):
         title.setFont(QFont("Arial", 16, QFont.Bold))
         layout.addWidget(title)
 
+
+
         # Project name file browser
-        self.project_name_btn = QPushButton("Open Project Folder")
-        self.project_name_btn.clicked.connect(self.openFileNameDialog)
-        self.project_name_btn.setStyleSheet("text-align: left; background:white; border: none; padding-left: 5px; padding-right: 5px;")
+        self.project_name_btn = QPushButton()
+        button_layout = QHBoxLayout(self.project_name_btn)
+
+        # Left side (aligned to the left)
+        left_label = QLabel("Open Project Folder")
+        left_label.setFont(QFont("Roboto", 10))
+        button_layout.addWidget(left_label)
+
+        # Spacer to push ">" to the right
+        button_layout.addStretch()
+
+        # Right side (aligned to the right)
+        icon_label = QLabel()
+        icon_label.setPixmap(QIcon(chevron_right_path).pixmap(16, 16))  # Adjust the size as needed
+        button_layout.addWidget(icon_label)
+
+        # Set styling for the button
+        self.project_name_btn.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
         self.project_name_btn.setFixedHeight(40)
+
+        # Connect button click signal
+        self.project_name_btn.clicked.connect(self.openFileNameDialog)
+
         layout.addWidget(self.project_name_btn)
+
+
+
 
         # Wrapper for widgets below the divider
         self.wrapper = QWidget()
@@ -41,24 +108,25 @@ class Launcher(QWidget):
         maps_title = QLabel("Maps")
         maps_title.setFont(QFont("Roboto", 12, QFont.Bold))
         reload_maps_btn = QPushButton("Reload maps")
-        reload_maps_btn.setStyleSheet("text-align: right; color: blue; border: none;")
+        reload_maps_btn.setStyleSheet("text-align: right; color: blue; border: none; font-family: Roboto; font-size: 12px; font-weight: bold;")
         maps_title_layout.addWidget(maps_title)
         maps_title_layout.addWidget(reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
 
         # Maps list
         maps_list = QListWidget()
+        maps_list.setStyleSheet("border: none;")
         self.wrapper_layout.addWidget(maps_list)
 
         # Launch mode and version selection
         launch_mode_combo = QComboBox()
         launch_mode_combo.addItems(["Server", "Client", "Standalone"])
-        launch_mode_combo.setStyleSheet("border: none; padding-left: 5px; padding-right: 5px;")
+        launch_mode_combo.setStyleSheet(combo_style)
         launch_mode_combo.setFixedHeight(40)
 
         unreal_combo = QComboBox()
-        unreal_combo.addItems(["Unreal Engine 4.25", "Unreal Engine 4.26"])
-        unreal_combo.setStyleSheet("border: none; padding-left: 5px; padding-right: 5px;")
+        unreal_combo.addItems(["Unreal Engine 4.25", "Unreal Engine 4.26", "Unreal Engine 5.0"])
+        unreal_combo.setStyleSheet(combo_style)
         unreal_combo.setFixedHeight(40)
 
         combo_layout = QHBoxLayout()
@@ -82,7 +150,7 @@ class Launcher(QWidget):
 
         # Launch project button
         launch_project_btn = QPushButton("Launch project")
-        launch_project_btn.setStyleSheet("color: white; background-color: blue; border: none;")
+        launch_project_btn.setStyleSheet("color: white; background-color: blue; border: none; font-family: Roboto; font-size: 14px; font-weight: bold;")
 
         launch_project_btn.setFixedHeight(40)
         self.wrapper_layout.addWidget(launch_project_btn)
