@@ -176,8 +176,8 @@ def find_umap_files(project_directory):
             for plugin_dir in plugin_dirs:
                 if plugin_dir in full_path:
                     plugin_name = os.path.basename(os.path.dirname(plugin_dir))
-                    relative_path = os.path.relpath(full_path, plugin_dir)
-                    unreal_path = f'/{plugin_name}/{relative_path.replace("\\", "/").replace(".umap", "")}'
+                    relative_path = os.path.relpath(full_path, plugin_dir).replace("\\", "/").replace(".umap", "")
+                    unreal_path = f'/{plugin_name}/{relative_path}'
                     break
         
         friendly_name = get_friendly_name(full_path)
@@ -210,10 +210,3 @@ def detect_unreal_versions():
             except (IOError, KeyError):
                 continue
     return versions_info
-
-    
-        
-    
-def load_project_uproject_file(project_directory):
-    """Loads the .uproject file from the project directory."""
-    # Implementation here

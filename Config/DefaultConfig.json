@@ -1,14 +1,14 @@
 {
-    "unreal_engine_paths": [
-      "C:/Program Files/Epic Games",
-      "D:/Program Files/Epic Games"
-    ],
-    "launch_commands": {
-      "Server": "\"{executable}\" \"{uproject_path}\" {map_path}?listen -server -log",
-      "Client": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log",
-      "Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1600 -ResY=900 -log"
-    },
-    "version": "0.0.0.5",
-    "GUI": true
-  }
-  
+	"unreal_engine_paths": [
+		"C:/Program Files/Epic Games",
+		"D:/Program Files/Epic Games",
+		"D:/UE"
+	],
+	"launch_commands": {
+		"Server": "\"{executable}\" \"{uproject_path}\" {map_path}?listen -server -log",
+		"Client": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log",
+		"Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1600 -ResY=900 -log"
+	},
+	"version": "0.0.0.5",
+	"GUI": true
+}

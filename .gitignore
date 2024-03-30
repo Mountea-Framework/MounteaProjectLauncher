@@ -1,6 +1,7 @@
 # Ignored folders
 build/*
 dist/*
+.idea/*
 
 # Ignored files
 *.spec
