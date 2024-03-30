@@ -178,12 +178,44 @@ def get_spacer(horizontal, vertical):
     return spacer
 
 
+def get_helper_label_style():
+    label_style = """
+        QLabel {{
+            color: gray;
+            font-family: {};
+            font-size: 14px;
+            font-align: center;
+            border: none;
+            background-color: white;
+            margin: 0px;
+        }}
+    """.format(get_custom_font_family())
+    return label_style
+
+
+def get_readonly_text_style():
+    label_style = """
+        QLineEdit {{
+            color: gray;
+            font-family: {};
+            font-size: 12px;
+            text-align: left;
+            border: none;
+            background-color: white;
+            margin: 0px;
+        }}
+    """.format(get_custom_font_family())
+    return label_style
+
+
 class Launcher(QWidget):
     def __init__(self, app):
         super().__init__()
 
         self.app = app
         self.setStyleSheet("background: #eaebef;")
+        self.unreal_versions_map = {}
+        self.launch_modes_map = {}
 
         layout = QVBoxLayout()
 
@@ -213,7 +245,7 @@ class Launcher(QWidget):
         self.project_name_btn.setLayout(button_layout)
 
         self.left_label = QLabel("Open Project Folder")
-        self.left_label.setFont(QFont(get_custom_font_family(), 10))
+        self.left_label.setStyleSheet(get_helper_label_style())
         button_layout.addWidget(self.left_label, alignment=Qt.AlignLeft)
 
         button_layout.addStretch()
@@ -250,7 +282,8 @@ class Launcher(QWidget):
         self.reload_maps_btn.setStyleSheet(get_secondary_button_style())
         self.reload_maps_btn.clicked.connect(self.load_maps)
         self.reload_maps_btn.setToolTip(
-            "Reloads all Maps within selected Project Folder\nResets selection and thus resetting command")
+            "Reloads all Maps within selected Project Folder\n"
+            "Resets selection and thus resetting command")
         maps_title_layout.addWidget(maps_title)
         maps_title_layout.addWidget(self.reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
@@ -266,14 +299,20 @@ class Launcher(QWidget):
 
         self.launch_modes = self.app.config.get("launch_commands", {})
         self.launch_mode_combo = QComboBox()
-        self.launch_mode_combo.addItems(self.launch_modes)
+        for launch_mode in self.launch_modes:
+            key = f"Launch Mode: {launch_mode}"
+            self.launch_modes_map[key] = launch_mode
+        self.launch_mode_combo.addItems(self.launch_modes_map)
         self.launch_mode_combo.setStyleSheet(get_combo_style(chevron_down_path, chevron_down_white_path))
         self.launch_mode_combo.setFixedHeight(50)
         self.launch_mode_combo.currentIndexChanged.connect(self.launch_mode_changed)
 
         self.unreal_combo = QComboBox()
         self.unreal_versions = detect_unreal_versions()
-        self.unreal_combo.addItems(self.unreal_versions)
+        for version in self.unreal_versions:
+            key = f"Unreal Engine: {version}"
+            self.unreal_versions_map[key] = version
+        self.unreal_combo.addItems(self.unreal_versions_map)
         self.unreal_combo.setStyleSheet(get_combo_style(chevron_down_path, chevron_down_white_path))
         self.unreal_combo.setFixedHeight(50)
         self.unreal_combo.currentIndexChanged.connect(self.engine_version_changed)
@@ -289,9 +328,8 @@ class Launcher(QWidget):
         path_layout = QHBoxLayout()
         self.path_edit = QLineEdit("")
         self.path_edit.setReadOnly(True)
-        self.path_edit.setFont(get_custom_font())
         path_layout.addWidget(self.path_edit)
-        self.path_edit.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
+        self.path_edit.setStyleSheet(get_readonly_text_style())
         self.path_edit.setFixedHeight(50)
 
         copy_button = QPushButton("Copy")
@@ -366,13 +404,14 @@ class Launcher(QWidget):
         self.update_ui()
 
     def launch_mode_changed(self):
-        selected_mode = self.launch_mode_combo.currentText()
+        key = self.launch_mode_combo.currentText()
+        selected_mode = self.launch_modes_map[key]
         self.app.set_selected_launch(selected_mode)
         self.update_ui()
 
     def engine_version_changed(self):
         selected_engine = self.unreal_combo.currentText()
-        selected_version = self.unreal_versions.get(selected_engine)[0]
+        selected_version = self.unreal_versions_map[selected_engine]
         self.app.set_selected_version(selected_version)
         self.update_ui()
 
