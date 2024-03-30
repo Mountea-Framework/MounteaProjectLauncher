@@ -171,6 +171,13 @@ def get_combo_style(arrow_url, arrow_url_active):
     return combo_style
 
 
+def get_spacer(horizontal, vertical):
+    spacer = QWidget()
+    spacer.setFixedHeight(vertical)
+    spacer.setFixedWidth(horizontal)
+    return spacer
+
+
 class Launcher(QWidget):
     def __init__(self, app):
         super().__init__()
@@ -199,16 +206,14 @@ class Launcher(QWidget):
         title.setFont(QFont(get_custom_font_family(), 16, QFont.Bold))
         title_layout.addWidget(title)
 
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        title_layout.addWidget()
+        title_layout.addWidget(get_spacer(0, 10))
 
         self.project_name_btn = QPushButton()
         button_layout = QHBoxLayout()
         self.project_name_btn.setLayout(button_layout)
 
         self.left_label = QLabel("Open Project Folder")
-        self.left_label.setFont(QFont("Roboto", 10))
+        self.left_label.setFont(QFont(get_custom_font_family(), 10))
         button_layout.addWidget(self.left_label, alignment=Qt.AlignLeft)
 
         button_layout.addStretch()
@@ -240,31 +245,24 @@ class Launcher(QWidget):
 
         maps_title_layout = QHBoxLayout()
         maps_title = QLabel("Maps")
-        maps_title.setFont(QFont("Roboto", 12, QFont.Bold))
+        maps_title.setFont(QFont(get_custom_font_family(), 12, QFont.Bold))
         self.reload_maps_btn = QPushButton("Reload maps")
         self.reload_maps_btn.setStyleSheet(get_secondary_button_style())
         self.reload_maps_btn.clicked.connect(self.load_maps)
         self.reload_maps_btn.setToolTip(
-            "Reloads all Maps within selected Project Folder\nResets selection and thus reseting command")
+            "Reloads all Maps within selected Project Folder\nResets selection and thus resetting command")
         maps_title_layout.addWidget(maps_title)
         maps_title_layout.addWidget(self.reload_maps_btn)
         self.wrapper_layout.addLayout(maps_title_layout)
 
-        maps_spacer = QWidget()
-        maps_spacer.setFixedHeight(2)
-        self.wrapper_layout.addWidget(maps_spacer)
+        self.wrapper_layout.addWidget(get_spacer(0, 2))
 
         self.maps_list = QListWidget()
         self.maps_list.setStyleSheet(get_map_list_style())
         self.maps_list.itemSelectionChanged.connect(self.handle_selection_change)
         self.wrapper_layout.addWidget(self.maps_list)
 
-        maps_spacer2 = QWidget()
-        maps_spacer2.setFixedHeight(2)
-        self.wrapper_layout.addWidget(maps_spacer2)
-
-        comb_spacer = QWidget()
-        comb_spacer.setFixedWidth(2)
+        self.wrapper_layout.addWidget(get_spacer(0, 2))
 
         self.launch_modes = self.app.config.get("launch_commands", {})
         self.launch_mode_combo = QComboBox()
@@ -282,17 +280,16 @@ class Launcher(QWidget):
 
         combo_layout = QHBoxLayout()
         combo_layout.addWidget(self.launch_mode_combo)
-        combo_layout.addWidget(comb_spacer)
+        combo_layout.addWidget(get_spacer(2, 0))
         combo_layout.addWidget(self.unreal_combo)
         self.wrapper_layout.addLayout(combo_layout)
 
-        comb_spacer2 = QWidget()
-        comb_spacer2.setFixedHeight(2)
-        self.wrapper_layout.addWidget(comb_spacer2)
+        self.wrapper_layout.addWidget(get_spacer(0, 2))
 
         path_layout = QHBoxLayout()
         self.path_edit = QLineEdit("")
         self.path_edit.setReadOnly(True)
+        self.path_edit.setFont(get_custom_font())
         path_layout.addWidget(self.path_edit)
         self.path_edit.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
         self.path_edit.setFixedHeight(50)
@@ -301,14 +298,13 @@ class Launcher(QWidget):
         copy_button.setStyleSheet(get_secondary_button_style())
         copy_button.clicked.connect(self.copy_command)
         copy_button.setToolTip(
-            "Will copy generated command to clipboard\nKeep in mind that this will replace last active item in your clipboard")
+            "Will copy generated command to clipboard\n"
+            "Keep in mind that this will replace last active item in your clipboard")
         path_layout.addWidget(copy_button)
 
         self.wrapper_layout.addLayout(path_layout)
 
-        path_spacer = QWidget()
-        path_spacer.setFixedHeight(2)
-        self.wrapper_layout.addWidget(path_spacer)
+        self.wrapper_layout.addWidget(get_spacer(0, 2))
 
         self.launch_project_btn = QPushButton("Launch project")
         self.launch_project_btn.setStyleSheet(get_primary_button_style())
