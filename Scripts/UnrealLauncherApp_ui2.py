@@ -3,112 +3,150 @@ import os
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox,
                              QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import (QFont, QIcon, QFontDatabase)
 
 from .utility import (find_umap_files, find_unreal_project, detect_unreal_versions)
 
 
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
+icon_filename = "MPLIcon.png"
+chevron_right_filename = "icon_chevron_right.png"
+chevron_down_filename = "icon_chevron_down.png"
+chevron_right_white_filename = "icon_chevron_right_white.png"
+chevron_down_white_filename = "icon_chevron_down_white.png"
+
+font_filename = "Inter-VariableFont.ttf"
+
+
+def get_custom_font():
+    custom_font = QFont()
+    font_path = os.path.join(script_dir, "..", "Fonts", font_filename).replace("\\", "/")
+    font_id = QFontDatabase.addApplicationFont(font_path)
+    if font_id != -1:
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        custom_font.setFamily(font_family)
+        return custom_font
+    else:
+        font_family = "Roboto"
+        custom_font.setFamily(font_family)
+        return custom_font
+
+
+def get_custom_font_family():
+    return get_custom_font().family()
+
+
 def get_map_list_style():
     maps_list_style = """
-        QListWidget {
+        QListWidget {{
             border: none;
             background-color: white;
-        }
-        QListWidget::item {
+        }}
+        QListWidget::item {{
             background-color: transparent;
             border: none;
             padding: 5px;
             outline: none;
-            font-family: Roboto;
+            font-family: {};
             font-size: 14px;
-        }
-        QListWidget::item:selected {
+        }}
+        QListWidget::item:selected {{
             background-color: #3651ea;
             color: white;
             border: none;
             outline: none;        
-        }
-        QListWidget::item:hover {
+        }}
+        QListWidget::item:hover {{
             background-color: gray;
             color: black;
             outline: none;
-        }
-        QScrollBar:vertical {
+        }}
+        QScrollBar:vertical {{
             background: #f0f0f0;
             border: none;
             width: 12px;
             margin: 0px 0px 0px 0px;
-        }
-        QScrollBar::handle:vertical {
+        }}
+        QScrollBar::handle:vertical {{
             background: #a3a3a3;
             min-height: 30ps;
-        }
-        QScrollBar::add-line:vertical {
+        }}
+        QScrollBar::add-line:vertical {{
             background: none;
             height: 0px;
-        }
-        QScrollBar::sub-line:vertical {
+        }}
+        QScrollBar::sub-line:vertical {{
             background: none;
             height: 0px;
-        }
-    """
+        }}
+    """.format(get_custom_font_family())
     return maps_list_style
 
 
 def get_primary_button_style():
     primary_button_style = """
-        QPushButton {
+        QPushButton {{
             color: white;
             background-color: #3651ea;
             border: none;
-            font-family: Roboto;
+            font-family: {};
             font-size: 14px;
             font-weight: bold;
-        }
-        
-        QPushButton:hover {
+        }}
+
+        QPushButton:hover {{
             background-color: blue;        
-        }
-        
-        QPushButton:disabled {
+        }}
+
+        QPushButton:disabled {{
             background-color: #b8b9bf;
             color: gray;
-        }
-    """
+        }}
+    """.format(get_custom_font_family())
     return primary_button_style
 
 
 def get_secondary_button_style():
     secondary_button_style = """
-        QPushButton {
+        QPushButton {{
             color: #3651ea;
             border: none;
-            font-family: Roboto;
+            font-family: {};
             font-size: 12px;
             text-align: right;
             font-weight: bold;
-        }
-        
-        QPushButton:hover {
+        }}
+
+        QPushButton:hover {{
             color: blue;
-        }
-        
-        QPushButton:disabled {
+        }}
+
+        QPushButton:disabled {{
             color: #b8b9bf;
-        }
-    """
+        }}
+    """.format(get_custom_font_family())
     return secondary_button_style
 
 
-def get_combo_style(arrow_url):
-    new_combo_style = """
+def get_combo_style(arrow_url, arrow_url_active):
+    combo_style = """
                 QComboBox {{
                     background: white;
                     color: black;
                     padding: 0px 10px 0px 10px;
                     border: none;
-                    font-family: Roboto;
+                    font-family: {};
                     font-size: 14px;
+                }}
+                
+                QComboBox:on {{
+                    background-color: #7c8ce9;
+                    color: white;
+                }}
+                
+                QComboBox:hover {{
+                    background-color: gray;
                 }}
 
                 QComboBox::drop-down {{
@@ -121,8 +159,16 @@ def get_combo_style(arrow_url):
                     height: 14px;
                     padding: 0px 10px 0px 0px;
                 }}
-            """.format(arrow_url)
-    return new_combo_style
+                
+                QComboBox::down-arrow::on {{
+                    image: url({});
+                }}
+                
+                QComboBox::item:hover {{
+                    background-color: gray;
+                }}
+            """.format(get_custom_font_family(), arrow_url, arrow_url_active)
+    return combo_style
 
 
 class Launcher(QWidget):
@@ -136,15 +182,11 @@ class Launcher(QWidget):
 
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
-        script_dir = os.path.dirname(os.path.realpath(__file__))
-
-        icon_filename = "MPLIcon.png"
-        chevron_right_filename = "icon_chevron_right.png"
-        chevron_down_filename = "icon_chevron_down.png"
-
         icon_path = os.path.join(script_dir, "..", "Icons", icon_filename).replace("\\", "/")
         chevron_right_path = os.path.join(script_dir, "..", "Icons", chevron_right_filename).replace("\\", "/")
         chevron_down_path = os.path.join(script_dir, "..", "Icons", chevron_down_filename).replace("\\", "/")
+        chevron_right_white_path = os.path.join(script_dir, "..", "Icons", chevron_right_white_filename).replace("\\", "/")
+        chevron_down_white_path = os.path.join(script_dir, "..", "Icons", chevron_down_white_filename).replace("\\", "/")
 
         self.setWindowIcon(QIcon(icon_path))
 
@@ -153,13 +195,13 @@ class Launcher(QWidget):
         title_layout.setAlignment(Qt.AlignTop)
 
         title = QLabel("Mountea Project Launcher")
-        title.setAlignment(Qt.AlignCenter)
-        title.setFont(QFont("Roboto", 16, QFont.Bold))
+        title.setAlignment(Qt.AlignLeft)
+        title.setFont(QFont(get_custom_font_family(), 16, QFont.Bold))
         title_layout.addWidget(title)
 
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        title_layout.addWidget(spacer)
+        title_layout.addWidget()
 
         self.project_name_btn = QPushButton()
         button_layout = QHBoxLayout()
@@ -227,14 +269,14 @@ class Launcher(QWidget):
         self.launch_modes = self.app.config.get("launch_commands", {})
         self.launch_mode_combo = QComboBox()
         self.launch_mode_combo.addItems(self.launch_modes)
-        self.launch_mode_combo.setStyleSheet(get_combo_style(chevron_down_path))
+        self.launch_mode_combo.setStyleSheet(get_combo_style(chevron_down_path, chevron_down_white_path))
         self.launch_mode_combo.setFixedHeight(50)
         self.launch_mode_combo.currentIndexChanged.connect(self.launch_mode_changed)
 
-        self.unreal_versions = detect_unreal_versions()
         self.unreal_combo = QComboBox()
+        self.unreal_versions = detect_unreal_versions()
         self.unreal_combo.addItems(self.unreal_versions)
-        self.unreal_combo.setStyleSheet(get_combo_style(chevron_down_path))
+        self.unreal_combo.setStyleSheet(get_combo_style(chevron_down_path, chevron_down_white_path))
         self.unreal_combo.setFixedHeight(50)
         self.unreal_combo.currentIndexChanged.connect(self.engine_version_changed)
 
@@ -372,9 +414,9 @@ class LauncherApp(QApplication):
     def __init__(self, parent, argv):
         super().__init__(argv)
         self.parent = parent
+        self.launcher = Launcher(self.parent)
 
     def start(self):
-        self.launcher = Launcher(self.parent)
         self.launcher.setWindowTitle("Mountea Project Launcher")
         self.launcher.show()
         sys.exit(self.exec_())
