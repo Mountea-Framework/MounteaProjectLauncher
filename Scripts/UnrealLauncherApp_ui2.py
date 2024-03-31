@@ -479,6 +479,7 @@ class Launcher(QWidget):
     def engine_version_changed(self):
         selected_engine = self.unreal_combo.currentText()
         selected_version = self.unreal_versions_map[selected_engine]
+        selected_version = self.unreal_versions.get(selected_version)[0]
         self.app.set_selected_version(selected_version)
         self.update_ui()
 
