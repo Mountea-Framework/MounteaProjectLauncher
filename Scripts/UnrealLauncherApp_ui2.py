@@ -1,9 +1,10 @@
 import sys
 import os
+
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox,
                              QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox, QCheckBox,
-                             QLayout)
+                             QLayout, QBoxLayout)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QFont, QIcon, QFontDatabase)
 
@@ -259,6 +260,11 @@ class Launcher(QWidget):
 
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
+        header = QWidget()
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setAlignment(Qt.AlignAbsolute | Qt.AlignTop)
+
         title_wrapper, title_layout = self.create_title_widget()
         title_label = self.create_title_label()
         spacer = get_spacer(0, 10)
@@ -268,7 +274,9 @@ class Launcher(QWidget):
         title_layout.addWidget(spacer)
         title_layout.addWidget(self.project_name_btn)
 
-        layout.addWidget(title_wrapper)
+        header_layout.addWidget(title_wrapper)
+
+        layout.addWidget(header)
 
         self.wrapper = QWidget()
         self.wrapper_layout = QVBoxLayout(self.wrapper)

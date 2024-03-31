@@ -9,6 +9,6 @@
 		"Client": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1200 -ResY=800 -log",
 		"Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1600 -ResY=900 -log"
 	},
-	"version": "0.0.0.5",
+	"version": "0.0.0.6",
 	"night_mode": true
 }
