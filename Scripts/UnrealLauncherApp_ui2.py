@@ -2,7 +2,8 @@ import sys
 import os
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox,
-                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox, QCheckBox, QLayout)
+                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox, QCheckBox,
+                             QLayout)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QFont, QIcon, QFontDatabase)
 
@@ -258,39 +259,13 @@ class Launcher(QWidget):
 
         self.setWindowFlags(Qt.WindowCloseButtonHint)
 
-        title_wrapper = QWidget()
-        title_layout = QVBoxLayout(title_wrapper)
-        title_layout.setAlignment(Qt.AlignTop)
+        title_wrapper, title_layout = self.create_title_widget()
+        title_label = self.create_title_label()
+        spacer = get_spacer(0, 10)
+        self.project_name_btn, self.left_label = self.create_project_button()
 
-        title = QLabel("Mountea Project Launcher")
-        title.setAlignment(Qt.AlignLeft)
-        title.setFont(QFont(get_custom_font_family(), 16, QFont.Bold))
-        title_layout.addWidget(title)
-
-        title_layout.addWidget(get_spacer(0, 10))
-
-        self.project_name_btn = QPushButton()
-        button_layout = QHBoxLayout()
-        self.project_name_btn.setLayout(button_layout)
-
-        self.left_label = QLabel("Open Project Folder")
-        self.left_label.setStyleSheet(get_helper_label_style())
-        button_layout.addWidget(self.left_label, alignment=Qt.AlignLeft)
-
-        button_layout.addStretch()
-
-        icon_label = QLabel()
-        icon_label.setPixmap(QIcon(get_chevron_icon_dark()[0]).pixmap(16, 16))
-        icon_label.setStyleSheet("background: transparent;")
-        button_layout.addWidget(icon_label, alignment=Qt.AlignRight)
-
-        self.project_name_btn.setStyleSheet(get_secondary_button_style())
-        self.project_name_btn.setFixedHeight(50)
-        self.project_name_btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-        self.project_name_btn.setToolTip("Open Project folder (must be Unreal Engine project folder)")
-        self.project_name_btn.clicked.connect(self.open_file_dialogue)
-        self.project_name_btn.installEventFilter(self)
-
+        title_layout.addWidget(title_label)
+        title_layout.addWidget(spacer)
         title_layout.addWidget(self.project_name_btn)
 
         layout.addWidget(title_wrapper)
@@ -386,12 +361,49 @@ class Launcher(QWidget):
         self.wrapper_layout.addWidget(self.launch_project_btn)
 
         self.setLayout(layout)
-        self.setGeometry(100, 100, 550, 700)
 
     def setup_window(self):
         self.setStyleSheet("background: #eaebef;")
         self.setWindowFlags(Qt.WindowCloseButtonHint)
         self.setWindowIcon(QIcon(get_app_icon()))
+        self.setGeometry(100, 100, 550, 700)
+
+    def create_title_widget(self):
+        title_wrapper = QWidget()
+        title_layout = QVBoxLayout(title_wrapper)
+        title_layout.setAlignment(Qt.AlignTop)
+        return title_wrapper, title_layout
+
+    def create_title_label(self):
+        title = QLabel("Mountea Project Launcher")
+        title.setAlignment(Qt.AlignLeft)
+        title.setFont(QFont(get_custom_font_family(), 16, QFont.Bold))
+        return title
+
+    def create_project_button(self):
+        project_button = QPushButton()
+        button_layout = QHBoxLayout()
+        project_button.setLayout(button_layout)
+
+        left_label = QLabel("Open Project Folder")
+        left_label.setStyleSheet(get_helper_label_style())
+        button_layout.addWidget(left_label, alignment=Qt.AlignLeft)
+
+        button_layout.addStretch()
+
+        icon_label = QLabel()
+        icon_label.setPixmap(QIcon(get_chevron_icon_dark()[0]).pixmap(16, 16))
+        icon_label.setStyleSheet("background: transparent;")
+        button_layout.addWidget(icon_label, alignment=Qt.AlignRight)
+
+        project_button.setStyleSheet(get_secondary_button_style())
+        project_button.setFixedHeight(50)
+        project_button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        project_button.setToolTip("Open Project folder (must be Unreal Engine project folder)")
+        project_button.clicked.connect(self.open_file_dialogue)
+        project_button.installEventFilter(self)
+
+        return project_button, left_label
 
     def toggle_night_mode(self):
         print(f"toggling")
