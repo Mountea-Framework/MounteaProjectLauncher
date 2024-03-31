@@ -1,12 +1,12 @@
 import sys
 import os
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox,
                              QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QFont, QIcon, QFontDatabase)
 
 from .utility import (find_umap_files, find_unreal_project, detect_unreal_versions)
-
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -109,6 +109,25 @@ def get_primary_button_style():
 
 def get_secondary_button_style():
     secondary_button_style = """
+            QPushButton {{
+                color: #3651ea;
+                border: none;
+                font-family: {};
+                font-size: 12px;
+                text-align: right;
+                font-weight: bold;
+                background: white;
+            }}
+
+            QPushButton:hover {{
+                background: #b8b9bf;
+            }}
+    """.format(get_custom_font_family())
+    return secondary_button_style
+
+
+def get_tertiary_button_style():
+    tertiary_button_style = """
         QPushButton {{
             color: #3651ea;
             border: none;
@@ -126,7 +145,7 @@ def get_secondary_button_style():
             color: #b8b9bf;
         }}
     """.format(get_custom_font_family())
-    return secondary_button_style
+    return tertiary_button_style
 
 
 def get_combo_style(arrow_url, arrow_url_active):
@@ -181,12 +200,12 @@ def get_spacer(horizontal, vertical):
 def get_helper_label_style():
     label_style = """
         QLabel {{
-            color: gray;
+            color: black;
             font-family: {};
             font-size: 14px;
             font-align: center;
             border: none;
-            background-color: white;
+            background-color: transparent;
             margin: 0px;
         }}
     """.format(get_custom_font_family())
@@ -224,8 +243,10 @@ class Launcher(QWidget):
         icon_path = os.path.join(script_dir, "..", "Icons", icon_filename).replace("\\", "/")
         chevron_right_path = os.path.join(script_dir, "..", "Icons", chevron_right_filename).replace("\\", "/")
         chevron_down_path = os.path.join(script_dir, "..", "Icons", chevron_down_filename).replace("\\", "/")
-        chevron_right_white_path = os.path.join(script_dir, "..", "Icons", chevron_right_white_filename).replace("\\", "/")
-        chevron_down_white_path = os.path.join(script_dir, "..", "Icons", chevron_down_white_filename).replace("\\", "/")
+        chevron_right_white_path = os.path.join(script_dir, "..", "Icons", chevron_right_white_filename).replace("\\",
+                                                                                                                 "/")
+        chevron_down_white_path = os.path.join(script_dir, "..", "Icons", chevron_down_white_filename).replace("\\",
+                                                                                                               "/")
 
         self.setWindowIcon(QIcon(icon_path))
 
@@ -252,13 +273,15 @@ class Launcher(QWidget):
 
         icon_label = QLabel()
         icon_label.setPixmap(QIcon(chevron_right_path).pixmap(16, 16))
+        icon_label.setStyleSheet("background: transparent;")
         button_layout.addWidget(icon_label, alignment=Qt.AlignRight)
 
-        self.project_name_btn.setStyleSheet("background: white; border: none; padding-left: 5px; padding-right: 5px;")
+        self.project_name_btn.setStyleSheet(get_secondary_button_style())
         self.project_name_btn.setFixedHeight(50)
         self.project_name_btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.project_name_btn.setToolTip("Open Project folder (must be Unreal Engine project folder)")
         self.project_name_btn.clicked.connect(self.open_file_dialogue)
+        self.project_name_btn.installEventFilter(self)
 
         title_layout.addWidget(self.project_name_btn)
 
@@ -279,7 +302,7 @@ class Launcher(QWidget):
         maps_title = QLabel("Maps")
         maps_title.setFont(QFont(get_custom_font_family(), 12, QFont.Bold))
         self.reload_maps_btn = QPushButton("Reload maps")
-        self.reload_maps_btn.setStyleSheet(get_secondary_button_style())
+        self.reload_maps_btn.setStyleSheet(get_tertiary_button_style())
         self.reload_maps_btn.clicked.connect(self.load_maps)
         self.reload_maps_btn.setToolTip(
             "Reloads all Maps within selected Project Folder\n"
@@ -333,7 +356,7 @@ class Launcher(QWidget):
         self.path_edit.setFixedHeight(50)
 
         copy_button = QPushButton("Copy")
-        copy_button.setStyleSheet(get_secondary_button_style())
+        copy_button.setStyleSheet(get_tertiary_button_style())
         copy_button.clicked.connect(self.copy_command)
         copy_button.setToolTip(
             "Will copy generated command to clipboard\n"
@@ -357,6 +380,22 @@ class Launcher(QWidget):
         self.setLayout(layout)
         self.setGeometry(100, 100, 550, 700)
 
+    def eventFilter(self, obj, event):
+        if obj == self.project_name_btn:
+            if event.type() == QtCore.QEvent.Enter:
+                if self.app.project_directory:
+                    self.left_label.setText("Open Different Project Folder")
+                else:
+                    self.left_label.setText("Open Project Folder")
+            elif event.type() == QtCore.QEvent.Leave:
+                if self.app.project_directory:
+                    folder_name = os.path.basename(self.app.project_directory)
+                    self.left_label.setText(f"{folder_name} Folder")
+                else:
+                    self.left_label.setText("Open Project Folder")
+
+        return super().eventFilter(obj, event)
+
     def open_file_dialogue(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -374,7 +413,7 @@ class Launcher(QWidget):
                 self.app.set_selected_project_file(find_unreal_project(folder))
 
                 folder_name = os.path.basename(folder)
-                self.left_label.setText(f"{folder_name} Folder | Select different project")
+                self.left_label.setText(f"{folder_name} Folder")
                 self.project_name_btn.setToolTip(
                     f"Currently opened project is {folder_name} | You can select any other by selecting different folder")
 

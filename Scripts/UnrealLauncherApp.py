@@ -15,8 +15,7 @@ class UnrealLauncherApp:
         self.selected_map = ""
         self.command = ""
         self.config = read_config()
-        if self.config.get("GUI", False):
-            self.initialize_ui()
+        self.initialize_ui()
 
     def initialize_ui(self):
         ui = LauncherApp(self, sys.argv)

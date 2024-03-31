@@ -10,5 +10,5 @@
 		"Standalone": "\"{executable}\" \"{uproject_path}\" {map_path} -game -WINDOWED -ResX=1600 -ResY=900 -log"
 	},
 	"version": "0.0.0.5",
-	"GUI": true
+	"night_mode": true
 }
