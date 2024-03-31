@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox,
-                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox)
+                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox, QCheckBox, QLayout)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QFont, QIcon, QFontDatabase)
 
@@ -227,28 +227,36 @@ def get_readonly_text_style():
     return label_style
 
 
+def get_app_icon():
+    return os.path.join(script_dir, "..", "Icons", icon_filename).replace("\\", "/")
+
+
+def get_chevron_icon_dark():
+    chevron_right_path = os.path.join(script_dir, "..", "Icons", chevron_right_filename).replace("\\", "/")
+    chevron_down_path = os.path.join(script_dir, "..", "Icons", chevron_down_filename).replace("\\", "/")
+    return chevron_right_path, chevron_down_path
+
+
+def get_chevron_icon_light():
+    chevron_right_white_path = os.path.join(script_dir, "..", "Icons", chevron_right_white_filename).replace("\\", "/")
+    chevron_down_white_path = os.path.join(script_dir, "..", "Icons", chevron_down_white_filename).replace("\\", "/")
+    return chevron_right_white_path, chevron_down_white_path
+
+
 class Launcher(QWidget):
     def __init__(self, app):
         super().__init__()
 
         self.app = app
-        self.setStyleSheet("background: #eaebef;")
+
         self.unreal_versions_map = {}
         self.launch_modes_map = {}
+
+        self.setup_window()
 
         layout = QVBoxLayout()
 
         self.setWindowFlags(Qt.WindowCloseButtonHint)
-
-        icon_path = os.path.join(script_dir, "..", "Icons", icon_filename).replace("\\", "/")
-        chevron_right_path = os.path.join(script_dir, "..", "Icons", chevron_right_filename).replace("\\", "/")
-        chevron_down_path = os.path.join(script_dir, "..", "Icons", chevron_down_filename).replace("\\", "/")
-        chevron_right_white_path = os.path.join(script_dir, "..", "Icons", chevron_right_white_filename).replace("\\",
-                                                                                                                 "/")
-        chevron_down_white_path = os.path.join(script_dir, "..", "Icons", chevron_down_white_filename).replace("\\",
-                                                                                                               "/")
-
-        self.setWindowIcon(QIcon(icon_path))
 
         title_wrapper = QWidget()
         title_layout = QVBoxLayout(title_wrapper)
@@ -272,7 +280,7 @@ class Launcher(QWidget):
         button_layout.addStretch()
 
         icon_label = QLabel()
-        icon_label.setPixmap(QIcon(chevron_right_path).pixmap(16, 16))
+        icon_label.setPixmap(QIcon(get_chevron_icon_dark()[0]).pixmap(16, 16))
         icon_label.setStyleSheet("background: transparent;")
         button_layout.addWidget(icon_label, alignment=Qt.AlignRight)
 
@@ -326,7 +334,7 @@ class Launcher(QWidget):
             key = f"Launch Mode: {launch_mode}"
             self.launch_modes_map[key] = launch_mode
         self.launch_mode_combo.addItems(self.launch_modes_map)
-        self.launch_mode_combo.setStyleSheet(get_combo_style(chevron_down_path, chevron_down_white_path))
+        self.launch_mode_combo.setStyleSheet(get_combo_style(get_chevron_icon_dark()[1], get_chevron_icon_light()[1]))
         self.launch_mode_combo.setFixedHeight(50)
         self.launch_mode_combo.currentIndexChanged.connect(self.launch_mode_changed)
 
@@ -336,7 +344,7 @@ class Launcher(QWidget):
             key = f"Unreal Engine: {version}"
             self.unreal_versions_map[key] = version
         self.unreal_combo.addItems(self.unreal_versions_map)
-        self.unreal_combo.setStyleSheet(get_combo_style(chevron_down_path, chevron_down_white_path))
+        self.unreal_combo.setStyleSheet(get_combo_style(get_chevron_icon_dark()[1], get_chevron_icon_light()[1]))
         self.unreal_combo.setFixedHeight(50)
         self.unreal_combo.currentIndexChanged.connect(self.engine_version_changed)
 
@@ -379,6 +387,14 @@ class Launcher(QWidget):
 
         self.setLayout(layout)
         self.setGeometry(100, 100, 550, 700)
+
+    def setup_window(self):
+        self.setStyleSheet("background: #eaebef;")
+        self.setWindowFlags(Qt.WindowCloseButtonHint)
+        self.setWindowIcon(QIcon(get_app_icon()))
+
+    def toggle_night_mode(self):
+        print(f"toggling")
 
     def eventFilter(self, obj, event):
         if obj == self.project_name_btn:
