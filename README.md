@@ -16,9 +16,17 @@ To get started with Mountea Project Launcher, clone the repository or download t
 ### Example
 
 <p align="center" width="100%">
-    <img width="33%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/29f3e2c7-93ea-49df-86eb-59320a2151d3">
-    <img width="33%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/0d3bb719-b8ed-449f-8df9-bb6d116d6ea2">
-    <img width="33%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/ec9b282e-37f6-4523-a867-a9593ea4f909">
+    <img width="66%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/5e0010bb-c5da-44ce-a661-2d27c8cbc33a">
+</p>
+
+<p align="center" width="100%">
+    <img width="40%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/b2dc31af-d406-4d93-a5bd-d68358cfa9ef">
+    <img width="40%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/9d43b751-f035-47eb-98ac-9587988787b3">
+</p>
+
+<p align="center" width="100%">
+    <img width="40%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/43532fbe-8d52-4ad3-9d5a-bdc1524bf082">
+    <img width="40%" src="https://github.com/Mountea-Framework/MounteaProjectLauncher/assets/37410226/694383a6-78e4-48ec-93d3-24c6c6b16caf">
 </p>
 
 
