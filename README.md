@@ -40,7 +40,7 @@ git clone https://github.com/Mountea-Framework/MounteaProjectLauncher.git
 Before you begin, ensure you have the following installed:
 
 - Python 3.x
-- Tkinter for the graphical interface (usually comes with Python)
+- PyQt5 to create GUI
 - PyInstaller to create a standalone executable (optional)
 
 ## Usage
