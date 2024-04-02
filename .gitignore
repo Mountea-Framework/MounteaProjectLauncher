@@ -6,3 +6,4 @@ dist/*
 # Ignored files
 *.spec
 *.pyc
+*.zip
