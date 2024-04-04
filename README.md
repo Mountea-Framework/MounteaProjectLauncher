@@ -57,3 +57,7 @@ Mountea is dedicated to providing tools and frameworks to enhance game developme
 
 ## Support
 For support join our Discord community.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Mountea-Framework/MounteaProjectLauncher&type=Date)](https://star-history.com/#Mountea-Framework/MounteaProjectLauncher&Date)
