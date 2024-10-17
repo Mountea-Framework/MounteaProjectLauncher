@@ -1,12 +1,13 @@
+[![Documentation](https://img.shields.io/badge/documentation-github?style=flat&logo=GitHub&labelColor=5a5a5a&color=98c510)](https://github.com/Mountea-Framework/MounteaProjectLauncher/wiki)
+[![License](https://img.shields.io/github/license/Mountea-Framework/ActorInteractionPlugin)](https://github.com/Mountea-Framework/MounteaProjectLauncher/blob/master/LICENSE)
+[![YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=flat&logo=youtube)](https://www.youtube.com/@mounteaframework)
+[![Discord](https://badgen.net/discord/online-members/2vXWEEN?label=&logoColor=ffffff&color=7389D8&icon=discord)](https://discord.com/invite/2vXWEEN)
+[![Discord](https://badgen.net/discord/members/2vXWEEN?label=&logo=discord&logoColor=ffffff&color=7389D8&icon=discord)](https://discord.com/invite/2vXWEEN)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d54a50e410184ddbb012dd24c3fd2bd0)](https://app.codacy.com/gh/Mountea-Framework/MounteaProjectLauncher/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 # Mountea Project Launcher
 
 Mountea Project Launcher is a tool designed to facilitate the launching of Unreal Engine projects with ease. It provides a graphical user interface that allows users to load Unreal Engine maps, select launch options, and manage different versions of the Unreal Engine installed on their system.
-
-![License](https://img.shields.io/github/license/Mountea-Framework/ActorInteractionPlugin)
-[![YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=flat&logo=youtube)](https://www.youtube.com/@mounteaframework)
-[![Discord](https://badgen.net/discord/online-members/2vXWEEN?label=Discord&logo=discord&logoColor=ffffff&color=7389D8)](https://discord.com/invite/2vXWEEN)
-[![Discord](https://badgen.net/discord/members/2vXWEEN?label=Discord&logo=discord&logoColor=ffffff&color=7389D8)](https://discord.com/invite/2vXWEEN)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d54a50e410184ddbb012dd24c3fd2bd0)](https://app.codacy.com/gh/Mountea-Framework/MounteaProjectLauncher/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ## Features
 
