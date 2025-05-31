@@ -3,8 +3,7 @@ import os
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox,
-                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox, QCheckBox,
-                             QLayout, QBoxLayout)
+                             QHBoxLayout, QLineEdit, QFileDialog, QListWidget, QSizePolicy, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import (QFont, QIcon, QFontDatabase)
 
