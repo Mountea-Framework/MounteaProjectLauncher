@@ -1,0 +1,47 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "ignorePatterns": [
+    "dist/",
+    "dist-electron/",
+    "node_modules/"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.ts",
+        "**/*.tsx"
+      ],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+      },
+      "plugins": [
+        "@typescript-eslint",
+        "react-hooks",
+        "security",
+        "xss"
+      ],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "rules": {
+        "security/detect-non-literal-fs-filename": "error",
+        "security/detect-object-injection": "error",
+        "@typescript-eslint/no-non-null-assertion": "error",
+        "@typescript-eslint/no-explicit-any": "error",
+        "react-hooks/exhaustive-deps": "error",
+        "xss/no-mixed-html": "error",
+        "@typescript-eslint/consistent-type-definitions": "error",
+        "@typescript-eslint/no-unused-vars": "error",
+        "no-unused-vars": "off"
+      }
+    }
+  ]
+}
