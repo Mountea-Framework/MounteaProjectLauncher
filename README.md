@@ -46,18 +46,25 @@ git clone https://github.com/Mountea-Framework/MounteaProjectLauncher.git
 ## Prerequisites
 Before you begin, ensure you have the following installed:
 
-- Python 3.x
-- PyQt5 to create GUI
-- PyInstaller to create a standalone executable (optional)
+- Node.js 20+ and npm
+- Windows (engine detection uses Windows paths)
+
+## Development
+```
+npm install
+npm run dev     # Electron app with hot reload
+npm test        # core unit tests (scan, command, store)
+npm run build   # type-check and build renderer + Electron bundles
+```
 
 ## Usage
-Run main.py to open the Mountea Project Launcher (or run release file). Use the interface to load maps from an Unreal Engine project, select your launch options, and manage engine versions.
+Projects are found automatically from the recent-projects list, your Documents\Unreal Projects folder and any scan roots you add in Settings. Select a project to choose engine, map and launch mode; each project keeps its own saved selections.
 
 ## Contributing
 Contributions to the Mountea Project Launcher are welcome! Feel free to submit pull requests or open issues to improve the tool.
 
 ## License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MPL 2.0 License. See `LICENSE` for more information.
 
 ## About Mountea
 Mountea is dedicated to providing tools and frameworks to enhance game development workflows. Check out our other projects!
