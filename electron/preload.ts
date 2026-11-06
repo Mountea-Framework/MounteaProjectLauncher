@@ -8,6 +8,7 @@ const call = <Method extends keyof LauncherApi>(method: Method, ...args: Paramet
 const api: LauncherApi = {
   scanProjects: () => call('scanProjects'),
   getProjectDetails: (projectPath) => call('getProjectDetails', projectPath),
+  openProjectFolder: (projectPath) => call('openProjectFolder', projectPath),
   getStore: () => call('getStore'),
   setGlobal: (settings) => call('setGlobal', settings),
   setProjectConfig: (projectPath, config) => call('setProjectConfig', projectPath, config),

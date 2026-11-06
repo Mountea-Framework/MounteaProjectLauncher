@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,6 +46,12 @@ function registerIpc() {
     return { engines: detectEngines(getStore().global.enginePaths), maps: listMaps(pp) };
   });
   h('getStore', () => getStore());
+  h('openProjectFolder', async (p) => {
+    const error = await shell.openPath(path.dirname(projectPath(p)));
+    if (error) {
+      throw new Error(error);
+    }
+  });
   h('setGlobal', (s) => updateGlobal(globalSettings(s)));
   h('setProjectConfig', (p, c) => setProjectConfig(projectPath(p), projectConfig(c)));
   h('previewCommand', (r) => {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Play } from 'lucide-react';
+import { Copy, FolderOpen, Play } from 'lucide-react';
 import type { LaunchRequest, ProjectConfig, ProjectDetails, ProjectInfo, StoreData } from '../../shared/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -113,6 +113,15 @@ export function ProjectPanel({ project, store, onStore }: Props) {
     }
   }
 
+  async function openProjectFolder() {
+    setError('');
+    try {
+      await window.launcher.openProjectFolder(project.path);
+    } catch (cause: unknown) {
+      setError(`Could not open project folder: ${String(cause)}`);
+    }
+  }
+
   async function copyCommand() {
     try {
       await navigator.clipboard.writeText(preview);
@@ -192,7 +201,11 @@ export function ProjectPanel({ project, store, onStore }: Props) {
         </div>
       </div>
       <DrawerFooter className="shrink-0 flex-row flex-wrap items-center justify-end gap-3 border-t bg-muted/20 px-6 py-4 sm:px-8">
-        <span className="mr-auto hidden text-xs text-muted-foreground sm:block">Settings are saved automatically</span>
+        <Button variant="outline" disabled={!project.exists} onClick={() => {
+          void openProjectFolder();
+        }}>
+          <FolderOpen /> Open project folder
+        </Button>
         <Button variant="outline" disabled={!preview} onClick={() => {
           void copyCommand();
         }}>
