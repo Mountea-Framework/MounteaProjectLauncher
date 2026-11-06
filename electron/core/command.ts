@@ -35,14 +35,25 @@ export function buildArgs(template: string[], values: TemplateValues): string[] 
   for (const token of template) {
     // A token that needs a map is dropped entirely when no map is chosen.
     if (token.includes('{map_path}') && !values.map_path) continue;
-    const t = token.replace(/\{(executable|uproject_path|map_path)\}/g, (_, k: keyof TemplateValues) => values[k]);
+    const t = token.replace(/\{(executable|uproject_path|map_path)\}/g, (placeholder: string) => {
+      switch (placeholder) {
+        case '{executable}':
+          return values.executable;
+        case '{uproject_path}':
+          return values.uproject_path;
+        case '{map_path}':
+          return values.map_path;
+        default:
+          return placeholder;
+      }
+    });
     if (t) out.push(t);
   }
   return out;
 }
 
 export function buildCommandArgs(request: LaunchRequest, settings: GlobalSettings): { file: string; args: string[] } {
-  const template = Object.hasOwn(settings.launchTemplates, request.launchMode) ? settings.launchTemplates[request.launchMode] : undefined;
+  const template = Object.entries(settings.launchTemplates).find(([mode]) => mode === request.launchMode)?.[1];
   if (!template) throw new Error(`Unknown launch mode: ${request.launchMode}`);
   const engine = detectEngines(settings.enginePaths).find((e) => e.version === request.engineVersion);
   if (!engine) throw new Error(`Engine ${request.engineVersion || '(none)'} not found`);
