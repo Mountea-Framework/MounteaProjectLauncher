@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw, Search } from 'lucide-react';
 import type { ProjectInfo, StoreData } from '../shared/types';
 import { Button } from '@/components/ui/button';
@@ -17,24 +17,67 @@ export default function App() {
   const [filter, setFilter] = useState('');
   const [view, setView] = useState<View>('all');
   const [engineCount, setEngineCount] = useState(0);
+  const [error, setError] = useState('');
+  const refreshVersion = useRef(0);
 
   const refresh = useCallback(async () => {
+    const version = ++refreshVersion.current;
     setScanning(true);
+    setError('');
     try {
-      setProjects(await window.launcher.scanProjects());
+      const nextProjects = await window.launcher.scanProjects();
+      if (version === refreshVersion.current) {
+        setProjects(nextProjects);
+      }
+    } catch (cause: unknown) {
+      if (version === refreshVersion.current) {
+        setError(`Could not scan projects: ${String(cause)}`);
+      }
     } finally {
-      setScanning(false);
+      if (version === refreshVersion.current) {
+        setScanning(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    window.launcher.getStore().then(setStore);
-    refresh();
+    let active = true;
+    window.launcher.getStore().then((nextStore) => {
+      if (active) {
+        setStore(nextStore);
+      }
+    }).catch((cause: unknown) => {
+      if (active) {
+        setError(`Could not load settings: ${String(cause)}`);
+      }
+    });
+    void refresh();
+    return () => {
+      active = false;
+      refreshVersion.current += 1;
+    };
   }, [refresh]);
 
   // Engines are global; any project's details lists them all.
   useEffect(() => {
-    if (projects[0]) window.launcher.getProjectDetails(projects[0].path).then((d) => setEngineCount(d.engines.length));
+    let active = true;
+    if (projects.length > 0) {
+      const project = projects[0];
+      window.launcher.getProjectDetails(project.path).then((details) => {
+        if (active) {
+          setEngineCount(details.engines.length);
+        }
+      }).catch((cause: unknown) => {
+        if (active) {
+          setError(`Could not load engines: ${String(cause)}`);
+        }
+      });
+    } else {
+      setEngineCount(0);
+    }
+    return () => {
+      active = false;
+    };
   }, [projects]);
 
   // Night mode drives the shadcn .dark class.
@@ -64,18 +107,27 @@ export default function App() {
           <div className="flex-1" />
           <div className="relative w-64">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-8" placeholder="Search..." value={filter} onChange={(e) => setFilter(e.target.value)} />
+            <Input className="pl-8" placeholder="Search..." value={filter} onChange={(e) => {
+              setFilter(e.target.value);
+            }} />
           </div>
-          <Button variant="outline" onClick={refresh} disabled={scanning}>
+          <Button variant="outline" onClick={() => {
+            void refresh();
+          }} disabled={scanning}>
             <RefreshCw className={scanning ? 'animate-spin' : ''} /> Refresh
           </Button>
         </header>
         <main className="flex-1 overflow-auto">
           <div className="p-6">
+            {error && <p role="alert" className="mb-4 text-sm text-destructive">{error}</p>}
             <ProjectGrid projects={shown} selected={selected?.path} onSelect={setSelected} />
           </div>
         </main>
-        <Drawer open={selected !== null} onOpenChange={(o) => !o && setSelected(null)}>
+        <Drawer open={selected !== null} onOpenChange={(open) => {
+          if (!open) {
+            setSelected(null);
+          }
+        }}>
           <DrawerContent className="max-h-[85vh]">
             {selected && store && <ProjectPanel key={selected.path} project={selected} store={store} onStore={setStore} />}
           </DrawerContent>

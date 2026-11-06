@@ -13,9 +13,15 @@ export function SettingsDialog({ global, onSaved, children }: { global: GlobalSe
   const [roots, setRoots] = useState('');
   const [engines, setEngines] = useState('');
   const [night, setNight] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   function onOpenChange(o: boolean) {
+    if (saving) {
+      return;
+    }
     if (o) {
+      setError('');
       setRoots(global.scanRoots.join('\n'));
       setEngines(global.enginePaths.join('\n'));
       setNight(global.nightMode);
@@ -24,8 +30,16 @@ export function SettingsDialog({ global, onSaved, children }: { global: GlobalSe
   }
 
   async function save() {
-    onSaved(await window.launcher.setGlobal({ scanRoots: lines(roots), enginePaths: lines(engines), nightMode: night }));
-    setOpen(false);
+    setSaving(true);
+    setError('');
+    try {
+      onSaved(await window.launcher.setGlobal({ scanRoots: lines(roots), enginePaths: lines(engines), nightMode: night }));
+      setOpen(false);
+    } catch (cause: unknown) {
+      setError(`Could not save settings: ${String(cause)}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -38,12 +52,16 @@ export function SettingsDialog({ global, onSaved, children }: { global: GlobalSe
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="roots">Scan roots</Label>
-            <Textarea id="roots" rows={3} className="font-mono text-xs" value={roots} onChange={(e) => setRoots(e.target.value)} />
+            <Textarea id="roots" rows={3} className="font-mono text-xs" value={roots} onChange={(e) => {
+              setRoots(e.target.value);
+            }} />
             <p className="text-xs text-muted-foreground">Folders searched for .uproject files, one per line.</p>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="engines">Engine paths</Label>
-            <Textarea id="engines" rows={3} className="font-mono text-xs" value={engines} onChange={(e) => setEngines(e.target.value)} />
+            <Textarea id="engines" rows={3} className="font-mono text-xs" value={engines} onChange={(e) => {
+              setEngines(e.target.value);
+            }} />
             <p className="text-xs text-muted-foreground">Extra Unreal Engine install folders, one per line.</p>
           </div>
           <div className="flex items-center justify-between rounded-lg border p-4">
@@ -54,7 +72,10 @@ export function SettingsDialog({ global, onSaved, children }: { global: GlobalSe
             <Switch id="night" checked={night} onCheckedChange={setNight} />
           </div>
         </div>
-        <DialogFooter><Button onClick={save}>Save</Button></DialogFooter>
+        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        <DialogFooter><Button disabled={saving} onClick={() => {
+          void save();
+        }}>{saving ? 'Saving...' : 'Save'}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

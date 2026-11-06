@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Copy, Play } from 'lucide-react';
 import type { LaunchRequest, ProjectConfig, ProjectDetails, ProjectInfo, StoreData } from '../../shared/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -24,40 +24,101 @@ export function ProjectPanel({ project, store, onStore }: Props) {
   const [details, setDetails] = useState<ProjectDetails>({ engines: [], maps: [] });
   const [engineVersion, setEngineVersion] = useState(saved.engineVersion ?? '');
   const [map, setMap] = useState(saved.map ?? '');
-  const [launchMode, setLaunchMode] = useState(saved.launchMode ?? modes[0] ?? '');
+  const [launchMode, setLaunchMode] = useState(saved.launchMode ?? (modes.length > 0 ? modes[0] : ''));
   const [extraArgs, setExtraArgs] = useState(saved.extraArgs ?? '');
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    window.launcher.getProjectDetails(project.path).then((d) => {
-      setDetails(d);
-      // Preselect the engine matching EngineAssociation when nothing was saved.
-      setEngineVersion((cur) => cur || d.engines.find((e) => e.version === project.engineAssociation)?.version || '');
+    let active = true;
+    window.launcher.getProjectDetails(project.path).then((nextDetails) => {
+      if (!active) {
+        return;
+      }
+      setDetails(nextDetails);
+      // An empty saved selection also falls back to EngineAssociation.
+      setEngineVersion((current) => {
+        if (current !== '') {
+          return current;
+        }
+        return nextDetails.engines.find((engine) => engine.version === project.engineAssociation)?.version ?? '';
+      });
       setLoaded(true);
+    }).catch((cause: unknown) => {
+      if (active) {
+        setError(`Could not load project details: ${String(cause)}`);
+      }
     });
-  }, [project]);
+    return () => {
+      active = false;
+    };
+  }, [project.path, project.engineAssociation]);
 
-  const request: LaunchRequest = { projectPath: project.path, engineVersion, map, launchMode, extraArgs };
+  const request = useMemo<LaunchRequest>(() => ({
+    projectPath: project.path,
+    engineVersion,
+    map,
+    launchMode,
+    extraArgs,
+  }), [project.path, engineVersion, map, launchMode, extraArgs]);
 
   useEffect(() => {
-    if (!loaded) return;
-    const t = setTimeout(() => {
-      const config: ProjectConfig = { ...saved, engineVersion, map, launchMode, extraArgs };
-      window.launcher.setProjectConfig(project.path, config).then(onStore);
-      window.launcher.previewCommand(request).then(setPreview).catch((e) => setPreview(String(e)));
+    if (!loaded) {
+      return;
+    }
+    let active = true;
+    const timer = setTimeout(() => {
+      const config: ProjectConfig = {
+        engineVersion: request.engineVersion,
+        map: request.map,
+        launchMode: request.launchMode,
+        extraArgs: request.extraArgs,
+      };
+      window.launcher.setProjectConfig(request.projectPath, config).then((nextStore) => {
+        if (active) {
+          onStore(nextStore);
+        }
+      }).catch((cause: unknown) => {
+        if (active) {
+          setError(`Could not save project settings: ${String(cause)}`);
+        }
+      });
+      window.launcher.previewCommand(request).then((command) => {
+        if (active) {
+          setPreview(command);
+        }
+      }).catch((cause: unknown) => {
+        if (active) {
+          setPreview('');
+          setError(`Could not preview command: ${String(cause)}`);
+        }
+      });
     }, 400);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, engineVersion, map, launchMode, extraArgs]);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [loaded, request, onStore]);
 
   async function launch() {
     setError('');
-    const res = await window.launcher
-      .launchProject(request)
-      .catch((e) => ({ ok: false, error: String(e), command: '' }));
-    if (!res.ok) setError(res.error ?? 'Launch failed');
+    try {
+      const result = await window.launcher.launchProject(request);
+      if (!result.ok) {
+        setError(result.error ?? 'Launch failed');
+      }
+    } catch (cause: unknown) {
+      setError(String(cause));
+    }
+  }
+
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(preview);
+    } catch (cause: unknown) {
+      setError(`Could not copy command: ${String(cause)}`);
+    }
   }
 
   return (
@@ -76,7 +137,9 @@ export function ProjectPanel({ project, store, onStore }: Props) {
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="launch-map">Startup map</Label>
-                <Select value={map || '__project_default__'} onValueChange={(value) => setMap(value === '__project_default__' ? '' : value)} disabled={!loaded}>
+                <Select value={map || '__project_default__'} onValueChange={(value) => {
+                  setMap(value === '__project_default__' ? '' : value);
+                }} disabled={!loaded}>
                   <SelectTrigger id="launch-map"><SelectValue placeholder="Select a map" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__project_default__">Project default</SelectItem>
@@ -111,7 +174,9 @@ export function ProjectPanel({ project, store, onStore }: Props) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="launch-args">Extra arguments</Label>
-              <Input id="launch-args" value={extraArgs} onChange={(e) => setExtraArgs(e.target.value)} placeholder="e.g. -log -windowed" />
+              <Input id="launch-args" value={extraArgs} onChange={(e) => {
+                setExtraArgs(e.target.value);
+              }} placeholder="e.g. -log -windowed" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="launch-preview">Command preview</Label>
@@ -119,7 +184,7 @@ export function ProjectPanel({ project, store, onStore }: Props) {
             </div>
             {error && (
               <Alert variant="destructive">
-                <AlertTitle>Launch failed</AlertTitle>
+                <AlertTitle>Project action failed</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -128,10 +193,14 @@ export function ProjectPanel({ project, store, onStore }: Props) {
       </div>
       <DrawerFooter className="shrink-0 flex-row flex-wrap items-center justify-end gap-3 border-t bg-muted/20 px-6 py-4 sm:px-8">
         <span className="mr-auto hidden text-xs text-muted-foreground sm:block">Settings are saved automatically</span>
-        <Button variant="outline" disabled={!preview} onClick={() => navigator.clipboard.writeText(preview)}>
+        <Button variant="outline" disabled={!preview} onClick={() => {
+          void copyCommand();
+        }}>
           <Copy /> Copy command
         </Button>
-        <Button onClick={launch} disabled={!project.exists || !engineVersion}>
+        <Button onClick={() => {
+          void launch();
+        }} disabled={!project.exists || !engineVersion}>
           <Play /> Launch project
         </Button>
       </DrawerFooter>
