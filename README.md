@@ -46,18 +46,30 @@ git clone https://github.com/Mountea-Framework/MounteaProjectLauncher.git
 ## Prerequisites
 Before you begin, ensure you have the following installed:
 
-- Python 3.x
-- PyQt5 to create GUI
-- PyInstaller to create a standalone executable (optional)
+- Node.js 24 LTS and npm
+- Windows (engine detection uses Windows paths)
+
+## Development
+```
+npm ci
+npm run lint    # full type-aware ESLint checks (requires installed dependencies)
+npm run dev     # Electron app with hot reload
+npm test        # core unit tests (scan, command, store)
+npm run build   # type-check and build renderer + Electron bundles
+```
+
+Codacy's hosted analyzer runs without this project's `node_modules`, so `.eslintrc.json` contains the dependency-independent rules. `npm run lint` adds every type-aware rule from the Codacy report through `eslint.typed.cjs`, using the same `tsconfig.json` and dependencies as the build. The Launcher quality workflow installs dependencies and runs both lint passes, tests, and the production build. This keeps unresolved third-party imports from generating false unsafe-type reports without dropping type-aware checks from CI.
+
+Filesystem warnings are reviewed at each access site. The launcher intentionally reads user-selected project and engine paths; reviewed exceptions carry a local explanation instead of disabling filesystem checks across production code.
 
 ## Usage
-Run main.py to open the Mountea Project Launcher (or run release file). Use the interface to load maps from an Unreal Engine project, select your launch options, and manage engine versions.
+Projects are found automatically from the recent-projects list, your Documents\Unreal Projects folder and any scan roots you add in Settings. Select a project to choose engine, map and launch mode; each project keeps its own saved selections.
 
 ## Contributing
 Contributions to the Mountea Project Launcher are welcome! Feel free to submit pull requests or open issues to improve the tool.
 
 ## License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MPL 2.0 License. See `LICENSE` for more information.
 
 ## About Mountea
 Mountea is dedicated to providing tools and frameworks to enhance game development workflows. Check out our other projects!
