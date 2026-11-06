@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { isObject } from './validation.ts';
 import { normalizePath } from './store.ts';
 import type { EngineInstall, MapInfo, ProjectInfo } from '../../shared/types.ts';
 
@@ -8,8 +9,9 @@ const SKIP = new Set(['node_modules', 'intermediate', 'binaries', 'saved', '.git
 const MAX_DEPTH = 4;
 const LAUNCHER_DAT = 'C:\\ProgramData\\Epic\\UnrealEngineLauncher\\LauncherInstalled.dat';
 
-function readJson(p: string): any {
+function readJson(p: string): unknown {
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only discovery intentionally supports user-selected project and engine paths; JSON is validated by callers.
     return JSON.parse(fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, ''));
   } catch {
     return undefined;
@@ -18,6 +20,7 @@ function readJson(p: string): any {
 
 function readDir(p: string): fs.Dirent[] {
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only discovery intentionally traverses user-selected project and engine directories.
     return fs.readdirSync(p, { withFileTypes: true });
   } catch {
     return [];
@@ -40,6 +43,7 @@ function recentProjects(): string[] {
   for (const v of readDir(base)) {
     let text = '';
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only discovery uses local Unreal settings beneath LOCALAPPDATA and directory entry names.
       text = fs.readFileSync(path.join(base, v.name, 'Saved', 'Config', 'WindowsEditor', 'EditorSettings.ini'), 'utf8');
     } catch {
       continue;
@@ -63,8 +67,10 @@ export function scanProjects(scanRoots: string[]): ProjectInfo[] {
   for (const [p, source] of found) {
     const key = normalizePath(p);
     if (seen.has(key)) continue;
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only existence check of a discovered project path; no filesystem writes occur.
     const exists = fs.existsSync(key);
-    const assoc = exists ? readJson(key)?.EngineAssociation : undefined;
+    const project: unknown = exists ? readJson(key) : undefined;
+    const assoc = isObject(project) ? project.EngineAssociation : undefined;
     seen.set(key, {
       path: key,
       name: path.basename(p, path.extname(p)),
@@ -80,9 +86,14 @@ function engineAt(root: string): EngineInstall | undefined {
   const bin = path.join(root, 'Engine', 'Binaries', 'Win64');
   for (const exe of ['UnrealEditor.exe', 'UE4Editor.exe']) {
     const executable = path.join(bin, exe);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only engine discovery checks known editor filenames under user-selected engine roots.
     if (!fs.existsSync(executable)) continue;
     const b = readJson(path.join(root, 'Engine', 'Build', 'Build.version'));
-    if (b?.MajorVersion === undefined || b?.MinorVersion === undefined) return undefined;
+    if (!isObject(b) || !Number.isInteger(b.MajorVersion) || !Number.isInteger(b.MinorVersion)
+      || typeof b.MajorVersion !== 'number' || typeof b.MinorVersion !== 'number'
+      || b.MajorVersion < 0 || b.MinorVersion < 0) {
+      return undefined;
+    }
     return { version: `${b.MajorVersion}.${b.MinorVersion}`, executable };
   }
 }
@@ -90,7 +101,15 @@ function engineAt(root: string): EngineInstall | undefined {
 export function detectEngines(enginePaths: string[]): EngineInstall[] {
   const roots = [...enginePaths];
   for (const e of enginePaths) for (const d of readDir(e)) if (d.isDirectory()) roots.push(path.join(e, d.name));
-  for (const i of readJson(LAUNCHER_DAT)?.InstallationList ?? []) if (typeof i?.InstallLocation === 'string') roots.push(i.InstallLocation);
+  const launcher = readJson(LAUNCHER_DAT);
+  if (isObject(launcher) && Array.isArray(launcher.InstallationList)) {
+    const installations: unknown[] = launcher.InstallationList;
+    for (const installation of installations) {
+      if (isObject(installation) && typeof installation.InstallLocation === 'string') {
+        roots.push(installation.InstallLocation);
+      }
+    }
+  }
 
   const seen = new Map<string, EngineInstall>();
   for (const r of roots) {
