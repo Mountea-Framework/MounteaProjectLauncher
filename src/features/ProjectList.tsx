@@ -1,4 +1,5 @@
-import { Folder, FolderX, Rocket, Settings } from 'lucide-react';
+import { Folder, FolderX, Settings } from 'lucide-react';
+import launcherIcon from '../../Icons/MPLIcon.png';
 import type { GlobalSettings, ProjectInfo, StoreData } from '../../shared/types';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,7 +36,7 @@ export function ProjectList({ projects, selected, view, engineCount, global, onV
     <Sidebar>
       <SidebarHeader className="gap-3 p-4">
         <div className="flex items-center gap-2 font-semibold">
-          <Rocket className="h-5 w-5" /> Mountea Launcher
+          <img src={launcherIcon} alt="" className="h-6 w-6 shrink-0 object-contain" /> Mountea Launcher
         </div>
         <Card>
           <CardContent className="p-3">

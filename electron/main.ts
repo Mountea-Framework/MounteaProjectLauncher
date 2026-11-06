@@ -71,6 +71,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
     height: 720,
+    icon: path.join(app.getAppPath(), 'Icons', 'MPLIcon.ico'),
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload },
   });
   const dev = process.env.VITE_DEV_SERVER_URL;
