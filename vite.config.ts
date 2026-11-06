@@ -16,7 +16,9 @@ export default defineConfig({
       name: 'classic-script-for-file-protocol',
       apply: 'build',
       transformIndexHtml(html) {
+        // This is Vite-generated HTML from the local entrypoint, not user input.
         // defer keeps the script running after #root is parsed, as module scripts did
+        // eslint-disable-next-line xss/no-mixed-html -- Rewrites a fixed script attribute in the trusted build entrypoint.
         return html.replace(/<script type="module" crossorigin src=/g, '<script defer src=');
       },
     },
@@ -38,7 +40,9 @@ export default defineConfig({
       },
       {
         entry: 'electron/preload.ts',
-        onstart: (o) => o.reload(),
+        onstart: (options) => {
+          options.reload();
+        },
         // Sandboxed preloads must be CJS; package.json "type": "module" would otherwise emit ESM.
         vite: {
           build: {
