@@ -21,7 +21,9 @@ export function ProjectGrid({ projects, selected, onSelect }: Props) {
         {projects.map((p) => (
           <Card
             key={p.path}
-            onClick={() => onSelect(p)}
+            onClick={() => {
+              onSelect(p);
+            }}
             className={cn('cursor-pointer overflow-hidden transition-colors hover:bg-accent', p.path === selected && 'ring-2 ring-ring')}
           >
             <div

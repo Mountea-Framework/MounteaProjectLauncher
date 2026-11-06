@@ -48,11 +48,15 @@ export function ProjectList({ projects, selected, view, engineCount, global, onV
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={view === 'all'} onClick={() => onView('all')}><Folder /> Projects</SidebarMenuButton>
+              <SidebarMenuButton isActive={view === 'all'} onClick={() => {
+                onView('all');
+              }}><Folder /> Projects</SidebarMenuButton>
               <SidebarMenuBadge>{projects.length}</SidebarMenuBadge>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={view === 'missing'} onClick={() => onView('missing')}><FolderX /> Missing</SidebarMenuButton>
+              <SidebarMenuButton isActive={view === 'missing'} onClick={() => {
+                onView('missing');
+              }}><FolderX /> Missing</SidebarMenuButton>
               <SidebarMenuBadge>{missing}</SidebarMenuBadge>
             </SidebarMenuItem>
             {global && (
@@ -69,7 +73,9 @@ export function ProjectList({ projects, selected, view, engineCount, global, onV
           <SidebarMenu>
             {projects.slice(0, 5).map((p) => (
               <SidebarMenuItem key={p.path}>
-                <SidebarMenuButton isActive={p.path === selected} onClick={() => onSelect(p)} className="justify-between">
+                <SidebarMenuButton isActive={p.path === selected} onClick={() => {
+                  onSelect(p);
+                }} className="justify-between">
                   <span className="truncate">{p.name}</span>
                   {p.engineAssociation && <Badge variant="secondary">{p.engineAssociation}</Badge>}
                 </SidebarMenuButton>
