@@ -7,3 +7,9 @@ dist/*
 *.spec
 *.pyc
 *.zip
+/node_modules
+
+# build output
+dist/
+dist-electron/
+node_modules/
