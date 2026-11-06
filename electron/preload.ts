@@ -1,7 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { LauncherApi } from '../shared/types.ts';
 
-const call = (method: string, ...args: unknown[]) => ipcRenderer.invoke(`launcher:${method}`, ...args);
+// Main owns these handlers and validates requests before returning the shared API contract.
+const call = <Method extends keyof LauncherApi>(method: Method, ...args: Parameters<LauncherApi[Method]>): ReturnType<LauncherApi[Method]> =>
+  ipcRenderer.invoke(`launcher:${method}`, ...args) as ReturnType<LauncherApi[Method]>;
 
 const api: LauncherApi = {
   scanProjects: () => call('scanProjects'),
