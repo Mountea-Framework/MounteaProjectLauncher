@@ -22,19 +22,18 @@ To get started with Mountea Project Launcher, clone the repository or download t
 
 ### Example
 
+https://github.com/user-attachments/assets/2b08bb3d-6a9a-4664-9b73-97f33eb3fc7e
+
 <p align="center" width="100%">
-    <video width="100%" src="https://github.com/user-attachments/assets/68ed178d-6701-4339-964b-99fffdb9c72a">
+    <img width="49%" src="https://github.com/user-attachments/assets/6ff137d6-c7c4-43e8-a3b9-f43cb8a4a34f">
+    <img width="49%" src="https://github.com/user-attachments/assets/20e2dc20-be82-4588-ae38-a264ec0a4707">
 </p>
 
 <p align="center" width="100%">
-    <img width="40%" src="https://github.com/user-attachments/assets/6ff137d6-c7c4-43e8-a3b9-f43cb8a4a34f">
-    <img width="40%" src="https://github.com/user-attachments/assets/20e2dc20-be82-4588-ae38-a264ec0a4707">
+    <img width="49%" src="https://github.com/user-attachments/assets/60464a95-79e3-41cf-9fc8-99f994fa2877">
+    <img width="49%" src="https://github.com/user-attachments/assets/50cbe8f7-5051-445f-afa1-9841b5688c85">
 </p>
 
-<p align="center" width="100%">
-    <img width="40%" src="https://github.com/user-attachments/assets/60464a95-79e3-41cf-9fc8-99f994fa2877">
-    <img width="40%" src="https://github.com/user-attachments/assets/50cbe8f7-5051-445f-afa1-9841b5688c85">
-</p>
 
 ### Clone
 
