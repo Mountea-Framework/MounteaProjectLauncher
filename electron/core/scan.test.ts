@@ -13,26 +13,31 @@ const touch = (p: string, c: string | Buffer = '') => {
   fs.writeFileSync(p, c);
 };
 
-void test('scanProjects restores filesystem casing from lowercase Windows recent paths and deduplicates roots', { skip: process.platform !== 'win32' }, () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scan-case-'));
+void test('scanProjects restores Windows casing and deduplicates recent paths and junction aliases', { skip: process.platform !== 'win32' }, () => {
+  // Runner TEMP may use a junction or an 8.3 alias. Canonicalize only the fixture's parent,
+  // so the expected project path still independently checks the mixed-case file names.
+  const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'scan-case-')));
   const projectPath = path.join(root, 'MixedCaseProject', 'MyProject.uproject');
   touch(projectPath, '{"EngineAssociation":"5.6"}');
-  const localAppData = process.env.LOCALAPPDATA;
+  const aliasRoot = path.join(root, 'ProjectAlias');
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- Both junction paths belong to this isolated temporary fixture.
+  fs.symlinkSync(path.dirname(projectPath), aliasRoot, 'junction');
   const settingsRoot = path.join(root, 'Settings');
+  const recentPath = path.join(aliasRoot, 'MyProject.uproject').toLowerCase();
   touch(path.join(settingsRoot, 'UnrealEngine', '5.6', 'Saved', 'Config', 'WindowsEditor', 'EditorSettings.ini'),
-    `RecentlyOpenedProjectFiles=${projectPath.toLowerCase()}`);
-  process.env.LOCALAPPDATA = settingsRoot;
-  try {
-    const found = scanProjects([root, root.toLowerCase()]).filter((project) => project.configKey === normalizePath(projectPath));
-    assert.equal(found.length, 1);
-    assert.equal(found[0].path, projectPath);
-    assert.equal(found[0].name, 'MyProject');
-    assert.equal(found[0].configKey, projectPath.toLowerCase());
-    assert.equal(found[0].engineAssociation, '5.6');
-  } finally {
-    if (localAppData === undefined) delete process.env.LOCALAPPDATA;
-    else process.env.LOCALAPPDATA = localAppData;
-  }
+    `RecentlyOpenedProjectFiles=${recentPath}`);
+
+  const found = scanProjects([root, root.toLowerCase(), aliasRoot], {
+    platform: 'win32',
+    homeDir: root,
+    localAppData: settingsRoot,
+  });
+  assert.equal(found.length, 1);
+  assert.equal(found[0].path, projectPath);
+  assert.equal(found[0].name, 'MyProject');
+  assert.equal(found[0].configKey, normalizePath(projectPath));
+  assert.equal(found[0].engineAssociation, '5.6');
+  assert.equal(found[0].source, 'recent');
 });
 
 void test('scanProjects uses Unreal thumbnail priority and tolerates missing, corrupt, and oversized images', () => {
