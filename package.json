@@ -11,7 +11,10 @@
     "test": "node --test --experimental-strip-types electron/core/*.test.ts",
     "start": "electron .",
     "lint": "eslint . --ext .ts,.tsx --no-eslintrc --config eslint.typed.cjs --max-warnings 0 --report-unused-disable-directives",
-    "lint:syntax": "eslint . --ext .ts,.tsx --max-warnings 0 --report-unused-disable-directives"
+    "lint:syntax": "eslint . --ext .ts,.tsx --max-warnings 0 --report-unused-disable-directives",
+    "package:dir": "npm run build && electron-builder --dir --publish never",
+    "package:mac": "npm run build && electron-builder --mac --universal --publish never",
+    "package:win": "npm run build && electron-builder --win --publish never"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "2.4.1",
@@ -41,6 +44,7 @@
     "@vitejs/plugin-react": "4.3.4",
     "autoprefixer": "10.4.20",
     "electron": "33.2.0",
+    "electron-builder": "26.18.0",
     "eslint": "8.57.1",
     "eslint-plugin-react-hooks": "5.2.0",
     "eslint-plugin-security": "3.0.1",
@@ -51,5 +55,39 @@
     "vite": "5.4.11",
     "vite-plugin-electron": "0.28.8",
     "vite-plugin-electron-renderer": "0.14.6"
+  },
+  "build": {
+    "appId": "com.mountea.projectlauncher",
+    "productName": "Mountea Project Launcher",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "Config/*.json",
+      "Icons/MPLIcon.*",
+      "LICENSE",
+      "package.json",
+      "!node_modules/**/*"
+    ],
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "Icons/MPLIcon.png",
+      "category": "public.app-category.developer-tools",
+      "minimumSystemVersion": "11.0"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "Icons/MPLIcon.ico"
+    }
   }
 }
