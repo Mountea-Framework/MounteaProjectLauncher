@@ -13,3 +13,6 @@ dist/*
 dist/
 dist-electron/
 node_modules/
+
+# Packaged desktop applications
+release/

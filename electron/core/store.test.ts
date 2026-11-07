@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadStore, readDefaults, setProjectConfig, updateGlobal, normalizePath } from './store.ts';
+import { loadStore, readDefaults, readApplicationDefaults, setProjectConfig, updateGlobal, normalizePath } from './store.ts';
 
 const defaults = { nightMode: true, scanRoots: [], enginePaths: ['x'], launchTemplates: {} };
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'store-'));
@@ -19,6 +19,25 @@ void test('missing file gives defaults, updates persist', () => {
   assert.deepEqual(s.projects[normalizePath('C:/A/B.uproject')], { map: '/Game/M', launchMode: 'Client' });
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test fixture paths are generated beneath an OS temporary directory.
   assert.equal(fs.existsSync(path.join(dir, 'settings.json.tmp')), false);
+});
+
+void test('case-preserved Windows project paths retain legacy lowercase settings and omitted fields', { skip: process.platform !== 'win32' }, () => {
+  const dir = tmp();
+  const projectPath = path.join(dir, 'MyProject', 'MyProject.uproject');
+  const legacyKey = projectPath.toLowerCase();
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test settings fixture is generated beneath an OS temporary directory.
+  fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({
+    version: 1,
+    global: defaults,
+    projects: { [legacyKey]: { map: '/Game/Existing', lastLaunched: '2026-11-06T12:00:00Z' } },
+  }));
+  loadStore(dir, defaults);
+  setProjectConfig(projectPath, { launchMode: 'Client' });
+  const store = loadStore(dir, defaults);
+  assert.deepEqual(Object.keys(store.projects), [legacyKey]);
+  assert.deepEqual(Object.values(store.projects)[0], {
+    map: '/Game/Existing', lastLaunched: '2026-11-06T12:00:00Z', launchMode: 'Client',
+  });
 });
 
 void test('corrupt file is renamed and defaults used', () => {
@@ -49,4 +68,18 @@ void test('invalid defaults fall back to safe settings', () => {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test fixture paths are generated beneath an OS temporary directory.
   fs.writeFileSync(file, '{"scanRoots":"invalid","nightMode":false}');
   assert.deepEqual(readDefaults(file), { nightMode: true, scanRoots: [], enginePaths: [], launchTemplates: {} });
+});
+
+void test('platform defaults keep Windows paths and common launch templates unchanged', () => {
+  const directory = path.resolve('Config');
+  const windows = readApplicationDefaults(directory, 'win32');
+  const mac = readApplicationDefaults(directory, 'darwin');
+  assert.deepEqual(windows.enginePaths, ['C:/Program Files/Epic Games', 'D:/Program Files/Epic Games', 'D:/UE']);
+  assert.deepEqual(mac.enginePaths, ['/Users/Shared/Epic Games', '/Users/Shared/UnrealEngine']);
+  assert.deepEqual(mac.launchTemplates, windows.launchTemplates);
+  assert.equal(mac.nightMode, windows.nightMode);
+  const dir = tmp();
+  loadStore(dir, mac);
+  updateGlobal({ enginePaths: ['/Volumes/Custom Engines/UE_5.6'] });
+  assert.deepEqual(loadStore(dir, mac).global.enginePaths, ['/Volumes/Custom Engines/UE_5.6']);
 });

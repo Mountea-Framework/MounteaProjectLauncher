@@ -8,6 +8,16 @@ export function normalizePath(p: string): string {
   return process.platform === 'win32' ? r.toLowerCase() : r;
 }
 
+/** Resolve existing filesystem casing independently of the stable settings key. */
+export function displayPath(p: string): string {
+  try {
+    // Read-only canonicalization restores Windows filesystem casing for discovered project paths.
+    return fs.realpathSync.native(p);
+  } catch {
+    return path.resolve(p);
+  }
+}
+
 let dir = '';
 let defaults: GlobalSettings;
 let data: StoreData;
@@ -24,6 +34,15 @@ export function readDefaults(defaultsFile: string): GlobalSettings {
   } catch {
     return base;
   }
+}
+
+/** Keep common launch templates while choosing shipped engine search roots for this OS. */
+export function readApplicationDefaults(configDirectory: string, platform: NodeJS.Platform = process.platform): GlobalSettings {
+  const settings = readDefaults(path.join(configDirectory, 'DefaultConfig.json'));
+  if (platform === 'darwin') {
+    settings.enginePaths = readDefaults(path.join(configDirectory, 'DefaultConfig.mac.json')).enginePaths;
+  }
+  return settings;
 }
 
 function save() {

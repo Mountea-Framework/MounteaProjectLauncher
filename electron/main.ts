@@ -1,15 +1,19 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from 'electron';
 import { spawn } from 'node:child_process';
+import type { OpenDialogOptions } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCommandArgs, formatCommand } from './core/command.ts';
 import { detectEngines, listMaps, scanProjects } from './core/scan.ts';
-import { getStore, loadStore, readDefaults, setProjectConfig, updateGlobal } from './core/store.ts';
+import { getStore, loadStore, readApplicationDefaults, setProjectConfig, updateGlobal } from './core/store.ts';
 import type { LaunchRequest, LaunchResult } from '../shared/types.ts';
 import { errorMessage, globalSettings, launchRequest, projectConfig, projectPath } from './core/validation.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+
+// Suppress Electron's default File/Edit/View menu before a window is created.
+Menu.setApplicationMenu(null);
 
 function resolveCommand(r: LaunchRequest) {
   const c = buildCommandArgs(r, getStore().global);
@@ -52,6 +56,19 @@ function registerIpc() {
       throw new Error(error);
     }
   });
+  h('pickEngineFolder', async (initialPath) => {
+    if (initialPath !== undefined && (typeof initialPath !== 'string' || initialPath.includes('\0'))) {
+      throw new Error('Invalid engine folder');
+    }
+    const options: OpenDialogOptions = {
+      title: 'Select Unreal Engine folder',
+      defaultPath: initialPath,
+      properties: process.platform === 'darwin' ? ['openDirectory', 'treatPackageAsDirectory'] : ['openDirectory'],
+    };
+    const window = BrowserWindow.getFocusedWindow();
+    const result = window ? await dialog.showOpenDialog(window, options) : await dialog.showOpenDialog(options);
+    return result.canceled ? null : result.filePaths[0] ?? null;
+  });
   h('setGlobal', (s) => updateGlobal(globalSettings(s)));
   h('setProjectConfig', (p, c) => setProjectConfig(projectPath(p), projectConfig(c)));
   h('previewCommand', (r) => {
@@ -71,6 +88,8 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
     height: 720,
+    icon: path.join(app.getAppPath(), 'Icons', process.platform === 'win32' ? 'MPLIcon.ico' : 'MPLIcon.png'),
+    autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload },
   });
   const dev = process.env.VITE_DEV_SERVER_URL;
@@ -81,7 +100,17 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  loadStore(app.getPath('userData'), readDefaults(path.join(app.getAppPath(), 'Config', 'DefaultConfig.json')));
+  if (process.platform === 'darwin') {
+    // These live in the macOS system bar, never inside the launcher window.
+    // Edit roles preserve native Command-key shortcuts for text controls.
+    Menu.setApplicationMenu(Menu.buildFromTemplate([
+      { role: 'appMenu' },
+      { role: 'editMenu' },
+      { role: 'windowMenu' },
+    ]));
+    app.dock.setIcon(path.join(app.getAppPath(), 'Icons', 'MPLIcon.png'));
+  }
+  loadStore(app.getPath('userData'), readApplicationDefaults(path.join(app.getAppPath(), 'Config')));
   registerIpc();
   createWindow();
   app.on('activate', () => {

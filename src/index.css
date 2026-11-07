@@ -62,17 +62,13 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  * { @apply border-border; }
-  html, body, #root { height: 100%; }
-  body { @apply bg-background text-foreground; background-color: hsl(var(--background)); }
-}
-
-@layer utilities {
-  .drawer-scroll {
+  * {
+    @apply border-border;
     scrollbar-width: none;
   }
-
-  .drawer-scroll::-webkit-scrollbar {
+  *::-webkit-scrollbar {
     display: none;
   }
+  html, body, #root { height: 100%; }
+  body { @apply bg-background text-foreground; background-color: hsl(var(--background)); }
 }
