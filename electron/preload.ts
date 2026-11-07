@@ -9,6 +9,7 @@ const api: LauncherApi = {
   scanProjects: () => call('scanProjects'),
   getProjectDetails: (projectPath) => call('getProjectDetails', projectPath),
   openProjectFolder: (projectPath) => call('openProjectFolder', projectPath),
+  pickEngineFolder: (initialPath) => call('pickEngineFolder', initialPath),
   getStore: () => call('getStore'),
   setGlobal: (settings) => call('setGlobal', settings),
   setProjectConfig: (projectPath, config) => call('setProjectConfig', projectPath, config),

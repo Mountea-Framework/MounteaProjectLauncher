@@ -79,6 +79,7 @@ export interface LauncherApi {
   scanProjects(): Promise<ProjectInfo[]>;
   getProjectDetails(projectPath: string): Promise<ProjectDetails>;
   openProjectFolder(projectPath: string): Promise<void>;
+  pickEngineFolder(initialPath?: string): Promise<string | null>;
   getStore(): Promise<StoreData>;
   setGlobal(settings: Partial<GlobalSettings>): Promise<StoreData>;
   setProjectConfig(projectPath: string, config: ProjectConfig): Promise<StoreData>;

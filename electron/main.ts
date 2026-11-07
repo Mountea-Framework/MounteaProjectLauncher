@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import { spawn } from 'node:child_process';
+import type { OpenDialogOptions } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,6 +52,19 @@ function registerIpc() {
     if (error) {
       throw new Error(error);
     }
+  });
+  h('pickEngineFolder', async (initialPath) => {
+    if (initialPath !== undefined && (typeof initialPath !== 'string' || initialPath.includes('\0'))) {
+      throw new Error('Invalid engine folder');
+    }
+    const options: OpenDialogOptions = {
+      title: 'Select Unreal Engine folder',
+      defaultPath: initialPath,
+      properties: ['openDirectory'],
+    };
+    const window = BrowserWindow.getFocusedWindow();
+    const result = window ? await dialog.showOpenDialog(window, options) : await dialog.showOpenDialog(options);
+    return result.canceled ? null : result.filePaths[0] ?? null;
   });
   h('setGlobal', (s) => updateGlobal(globalSettings(s)));
   h('setProjectConfig', (p, c) => setProjectConfig(projectPath(p), projectConfig(c)));
