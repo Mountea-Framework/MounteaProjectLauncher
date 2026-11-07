@@ -1,8 +1,12 @@
 // Contract shared by the Electron main process (electron/) and the React renderer (src/).
 
 export interface ProjectInfo {
-  /** Absolute path to the .uproject file (normalized, used as the store key). */
+  /** Absolute path to the .uproject file, preserving its filesystem casing. */
   path: string;
+  /** Normalized path used for persisted settings, including legacy lowercase Windows keys. */
+  configKey?: string;
+  /** Bounded PNG data URL from the project's conventional Unreal thumbnail, when available. */
+  thumbnailUrl?: string;
   /** File name without extension. */
   name: string;
   /** Value of EngineAssociation in the .uproject, may be empty. */

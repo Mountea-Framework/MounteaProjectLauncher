@@ -21,6 +21,25 @@ void test('missing file gives defaults, updates persist', () => {
   assert.equal(fs.existsSync(path.join(dir, 'settings.json.tmp')), false);
 });
 
+void test('case-preserved Windows project paths retain legacy lowercase settings and omitted fields', { skip: process.platform !== 'win32' }, () => {
+  const dir = tmp();
+  const projectPath = path.join(dir, 'MyProject', 'MyProject.uproject');
+  const legacyKey = projectPath.toLowerCase();
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test settings fixture is generated beneath an OS temporary directory.
+  fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({
+    version: 1,
+    global: defaults,
+    projects: { [legacyKey]: { map: '/Game/Existing', lastLaunched: '2026-11-06T12:00:00Z' } },
+  }));
+  loadStore(dir, defaults);
+  setProjectConfig(projectPath, { launchMode: 'Client' });
+  const store = loadStore(dir, defaults);
+  assert.deepEqual(Object.keys(store.projects), [legacyKey]);
+  assert.deepEqual(Object.values(store.projects)[0], {
+    map: '/Game/Existing', lastLaunched: '2026-11-06T12:00:00Z', launchMode: 'Client',
+  });
+});
+
 void test('corrupt file is renamed and defaults used', () => {
   const dir = tmp();
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test fixture paths are generated beneath an OS temporary directory.

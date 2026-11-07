@@ -4,13 +4,56 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { detectEngines, listMaps, scanProjects } from './scan.ts';
+import { normalizePath } from './store.ts';
 
-const touch = (p: string, c = '') => {
+const touch = (p: string, c: string | Buffer = '') => {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test fixture paths are generated beneath an OS temporary directory.
   fs.mkdirSync(path.dirname(p), { recursive: true });
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test fixture paths are generated beneath an OS temporary directory.
   fs.writeFileSync(p, c);
 };
+
+void test('scanProjects restores filesystem casing from lowercase Windows recent paths and deduplicates roots', { skip: process.platform !== 'win32' }, () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scan-case-'));
+  const projectPath = path.join(root, 'MixedCaseProject', 'MyProject.uproject');
+  touch(projectPath, '{"EngineAssociation":"5.6"}');
+  const localAppData = process.env.LOCALAPPDATA;
+  const settingsRoot = path.join(root, 'Settings');
+  touch(path.join(settingsRoot, 'UnrealEngine', '5.6', 'Saved', 'Config', 'WindowsEditor', 'EditorSettings.ini'),
+    `RecentlyOpenedProjectFiles=${projectPath.toLowerCase()}`);
+  process.env.LOCALAPPDATA = settingsRoot;
+  try {
+    const found = scanProjects([root, root.toLowerCase()]).filter((project) => project.configKey === normalizePath(projectPath));
+    assert.equal(found.length, 1);
+    assert.equal(found[0].path, projectPath);
+    assert.equal(found[0].name, 'MyProject');
+    assert.equal(found[0].configKey, projectPath.toLowerCase());
+    assert.equal(found[0].engineAssociation, '5.6');
+  } finally {
+    if (localAppData === undefined) delete process.env.LOCALAPPDATA;
+    else process.env.LOCALAPPDATA = localAppData;
+  }
+});
+
+void test('scanProjects uses Unreal thumbnail priority and tolerates missing, corrupt, and oversized images', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scan-image-'));
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64');
+  const cases = ['Explicit', 'Automatic', 'Corrupt', 'Missing', 'Oversized'];
+  for (const name of cases) touch(path.join(root, name, `${name}.uproject`), '{}');
+  touch(path.join(root, 'Explicit', 'Explicit.png'), png);
+  touch(path.join(root, 'Explicit', 'Saved', 'AutoScreenshot.png'), 'invalid ignored screenshot');
+  touch(path.join(root, 'Automatic', 'Automatic.png'), 'corrupt image');
+  touch(path.join(root, 'Automatic', 'Saved', 'AutoScreenshot.png'), png);
+  touch(path.join(root, 'Corrupt', 'Corrupt.png'), Buffer.alloc(64));
+  touch(path.join(root, 'Oversized', 'Oversized.png'), Buffer.alloc(2 * 1024 * 1024 + 1));
+  const found = scanProjects([root]);
+  for (const name of ['Explicit', 'Automatic']) {
+    assert.equal(found.find((project) => project.name === name)?.thumbnailUrl, `data:image/png;base64,${png.toString('base64')}`);
+  }
+  for (const name of ['Corrupt', 'Missing', 'Oversized']) {
+    assert.equal(found.find((project) => project.name === name)?.thumbnailUrl, undefined);
+  }
+});
 
 void test('scanProjects finds, dedupes and tolerates bad json', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'scan-'));

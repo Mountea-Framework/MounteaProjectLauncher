@@ -2,12 +2,38 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { isObject } from './validation.ts';
-import { normalizePath } from './store.ts';
+import { displayPath, normalizePath } from './store.ts';
 import type { EngineInstall, MapInfo, ProjectInfo } from '../../shared/types.ts';
 
 const SKIP = new Set(['node_modules', 'intermediate', 'binaries', 'saved', '.git', 'deriveddatacache']);
 const MAX_DEPTH = 4;
 const LAUNCHER_DAT = 'C:\\ProgramData\\Epic\\UnrealEngineLauncher\\LauncherInstalled.dat';
+const MAX_THUMBNAIL_BYTES = 2 * 1024 * 1024;
+const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+/** Match Unreal's project browser: explicit project PNG, then the editor's automatic screenshot. */
+function projectThumbnail(projectPath: string): string | undefined {
+  const root = path.dirname(projectPath);
+  const candidates = [
+    path.join(root, `${path.basename(projectPath, path.extname(projectPath))}.png`),
+    path.join(root, 'Saved', 'AutoScreenshot.png'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only thumbnail discovery checks fixed Unreal image names beside the discovered project.
+      const stat = fs.statSync(candidate);
+      if (!stat.isFile() || stat.size < 33 || stat.size > MAX_THUMBNAIL_BYTES) continue;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- Only bounded conventional project PNGs are read and exposed as data URLs, never arbitrary renderer paths.
+      const bytes = fs.readFileSync(candidate);
+      if (bytes.length > MAX_THUMBNAIL_BYTES || !bytes.subarray(0, 8).equals(PNG_SIGNATURE)
+        || bytes.readUInt32BE(8) !== 13 || bytes.toString('ascii', 12, 16) !== 'IHDR'
+        || bytes.readUInt32BE(16) === 0 || bytes.readUInt32BE(20) === 0) continue;
+      return `data:image/png;base64,${bytes.toString('base64')}`;
+    } catch {
+      // Missing, unreadable, or invalid thumbnails leave the normal card fallback available.
+    }
+  }
+}
 
 function readJson(p: string): unknown {
   try {
@@ -65,15 +91,18 @@ export function scanProjects(scanRoots: string[]): ProjectInfo[] {
 
   const seen = new Map<string, ProjectInfo>();
   for (const [p, source] of found) {
-    const key = normalizePath(p);
+    const projectPath = displayPath(p);
+    const key = normalizePath(projectPath);
     if (seen.has(key)) continue;
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- Read-only existence check of a discovered project path; no filesystem writes occur.
-    const exists = fs.existsSync(key);
-    const project: unknown = exists ? readJson(key) : undefined;
+    const exists = fs.existsSync(projectPath);
+    const project: unknown = exists ? readJson(projectPath) : undefined;
     const assoc = isObject(project) ? project.EngineAssociation : undefined;
     seen.set(key, {
-      path: key,
-      name: path.basename(p, path.extname(p)),
+      path: projectPath,
+      configKey: key,
+      thumbnailUrl: exists ? projectThumbnail(projectPath) : undefined,
+      name: path.basename(projectPath, path.extname(projectPath)),
       engineAssociation: typeof assoc === 'string' ? assoc : '',
       exists,
       source,
