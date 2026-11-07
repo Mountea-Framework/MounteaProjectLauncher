@@ -47,7 +47,7 @@ git clone https://github.com/Mountea-Framework/MounteaProjectLauncher.git
 Before you begin, ensure you have the following installed:
 
 - Node.js 24 LTS and npm
-- Windows (engine detection uses Windows paths)
+- Windows or macOS 11+ (Intel and Apple Silicon)
 
 ## Development
 ```
@@ -62,8 +62,25 @@ Codacy's hosted analyzer runs without this project's `node_modules`, so `.eslint
 
 Filesystem warnings are reviewed at each access site. The launcher intentionally reads user-selected project and engine paths; reviewed exceptions carry a local explanation instead of disabling filesystem checks across production code.
 
+## Desktop packages
+
+Build on the target operating system with Node.js 24:
+
+```sh
+npm ci
+npm run package:dir  # unpacked app for the current OS, under release/
+npm run package:mac  # run on a Mac: universal Intel + Apple Silicon DMG and ZIP
+npm run package:win  # run on Windows: NSIS installer
+```
+
+Packages include the production renderer, Electron main/preload bundles, defaults and Mountea icons. No development server is needed. Nothing is published by these commands. Local builds are unsigned unless signing credentials are configured; public macOS distribution requires a Developer ID identity and Apple notarization credentials through electron-builder. The macOS CI job checks the native build/package without signing; a signed DMG and an actual Unreal launch still need validation on a Mac before release.
+
+The launcher has no in-window File/Edit/View menu. macOS retains its native system app, editing and window menus for Command-key shortcuts, Quit, and standard window behavior. Closing the last window keeps the Mac app available in the Dock; clicking its icon reopens the window.
+
 ## Usage
-Projects are found automatically from the recent-projects list, your Documents\Unreal Projects folder and any scan roots you add in Settings. Select a project to choose engine, map and launch mode; each project keeps its own saved selections.
+Projects are found automatically from Unreal's recent-projects settings, your Documents/Unreal Projects folder and any scan roots you add in Settings. Select a project to choose engine, map and launch mode; each project keeps its own saved selections.
+
+Windows keeps the existing engine search defaults. On macOS, the defaults are `/Users/Shared/Epic Games` and `/Users/Shared/UnrealEngine`; registered source builds are also read from Epic's `Install.ini`. Add or edit an engine folder in Settings for custom installations. UnrealEditor.app and UE4Editor.app bundles are supported, including directly selected bundles. Recent projects are read from modern Application Support settings and compatible Preferences locations. Existing user-selected paths and per-project settings are preserved.
 
 ## Contributing
 Contributions to the Mountea Project Launcher are welcome! Feel free to submit pull requests or open issues to improve the tool.
