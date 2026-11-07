@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
   project: ProjectInfo;
@@ -19,7 +20,7 @@ interface Props {
 
 // Remounted per project (key in App), so state initialises from the saved config once.
 export function ProjectPanel({ project, store, onStore }: Props) {
-  const saved = store.projects[project.path] ?? {};
+  const saved = store.projects[project.configKey ?? project.path] ?? {};
   const modes = Object.keys(store.global.launchTemplates);
   const [details, setDetails] = useState<ProjectDetails>({ engines: [], maps: [] });
   const [engineVersion, setEngineVersion] = useState(saved.engineVersion ?? '');
@@ -134,15 +135,24 @@ export function ProjectPanel({ project, store, onStore }: Props) {
     <>
       <DrawerHeader className="shrink-0 gap-2 border-b px-6 pb-5 pt-3 text-left sm:px-8">
         <div className="flex items-center gap-3">
-          <DrawerTitle className="text-xl">{project.name}</DrawerTitle>
+          <DrawerTitle className="min-w-0 truncate text-xl">{project.name}</DrawerTitle>
           {project.engineAssociation && <Badge variant="secondary">UE {project.engineAssociation}</Badge>}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground" aria-label="Open project folder" disabled={!project.exists} onClick={() => {
+                void openProjectFolder();
+              }}>
+                <FolderOpen />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open project folder</TooltipContent>
+          </Tooltip>
         </div>
         <DrawerDescription className="truncate text-xs" title={project.path}>{project.path}</DrawerDescription>
       </DrawerHeader>
       <div className="drawer-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="px-6 py-6 sm:px-8">
-          <section className="min-w-0 space-y-5" aria-labelledby="launch-settings-heading">
-            <h2 id="launch-settings-heading" className="text-sm font-semibold">Launch settings</h2>
+          <section className="min-w-0 space-y-5" aria-label="Project launch options">
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="min-w-0 space-y-2">
                 <Label htmlFor="launch-map">Startup map</Label>
@@ -201,11 +211,6 @@ export function ProjectPanel({ project, store, onStore }: Props) {
         </div>
       </div>
       <DrawerFooter className="shrink-0 flex-row flex-wrap items-center justify-end gap-3 border-t bg-muted/20 px-6 py-4 sm:px-8">
-        <Button variant="outline" disabled={!project.exists} onClick={() => {
-          void openProjectFolder();
-        }}>
-          <FolderOpen /> Open project folder
-        </Button>
         <Button variant="outline" disabled={!preview} onClick={() => {
           void copyCommand();
         }}>
