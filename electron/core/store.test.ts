@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { loadStore, readDefaults, setProjectConfig, updateGlobal, normalizePath } from './store.ts';
+import { loadStore, readDefaults, readApplicationDefaults, setProjectConfig, updateGlobal, normalizePath } from './store.ts';
 
 const defaults = { nightMode: true, scanRoots: [], enginePaths: ['x'], launchTemplates: {} };
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'store-'));
@@ -68,4 +68,18 @@ void test('invalid defaults fall back to safe settings', () => {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Test fixture paths are generated beneath an OS temporary directory.
   fs.writeFileSync(file, '{"scanRoots":"invalid","nightMode":false}');
   assert.deepEqual(readDefaults(file), { nightMode: true, scanRoots: [], enginePaths: [], launchTemplates: {} });
+});
+
+void test('platform defaults keep Windows paths and common launch templates unchanged', () => {
+  const directory = path.resolve('Config');
+  const windows = readApplicationDefaults(directory, 'win32');
+  const mac = readApplicationDefaults(directory, 'darwin');
+  assert.deepEqual(windows.enginePaths, ['C:/Program Files/Epic Games', 'D:/Program Files/Epic Games', 'D:/UE']);
+  assert.deepEqual(mac.enginePaths, ['/Users/Shared/Epic Games', '/Users/Shared/UnrealEngine']);
+  assert.deepEqual(mac.launchTemplates, windows.launchTemplates);
+  assert.equal(mac.nightMode, windows.nightMode);
+  const dir = tmp();
+  loadStore(dir, mac);
+  updateGlobal({ enginePaths: ['/Volumes/Custom Engines/UE_5.6'] });
+  assert.deepEqual(loadStore(dir, mac).global.enginePaths, ['/Volumes/Custom Engines/UE_5.6']);
 });

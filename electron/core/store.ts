@@ -36,6 +36,15 @@ export function readDefaults(defaultsFile: string): GlobalSettings {
   }
 }
 
+/** Keep common launch templates while choosing shipped engine search roots for this OS. */
+export function readApplicationDefaults(configDirectory: string, platform: NodeJS.Platform = process.platform): GlobalSettings {
+  const settings = readDefaults(path.join(configDirectory, 'DefaultConfig.json'));
+  if (platform === 'darwin') {
+    settings.enginePaths = readDefaults(path.join(configDirectory, 'DefaultConfig.mac.json')).enginePaths;
+  }
+  return settings;
+}
+
 function save() {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Store directory comes from Electron userData, never from renderer input.
   fs.mkdirSync(dir, { recursive: true });
