@@ -66,6 +66,14 @@ export function buildCommandArgs(request: LaunchRequest, settings: GlobalSetting
   return { file, args: [...args, ...splitArgs(request.extraArgs)] };
 }
 
-export function formatCommand(file: string, args: string[]): string {
+export function formatCommand(file: string, args: string[], platform: NodeJS.Platform = process.platform): string {
+  if (platform !== 'win32') {
+    return [file, ...args].map((argument) => {
+      if (/^[A-Za-z0-9_./:=+-]+$/.test(argument)) {
+        return argument;
+      }
+      return "'" + argument.replace(/'/g, "'\\''") + "'";
+    }).join(' ');
+  }
   return [file, ...args].map((a) => (/[\s"]/.test(a) || a === '' ? `"${a.replace(/"/g, '\\"')}"` : a)).join(' ');
 }
