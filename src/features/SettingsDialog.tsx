@@ -39,7 +39,10 @@ export function SettingsDialog({ global, onSaved, children }: { global: GlobalSe
       if (!selected) {
         return;
       }
-      const comparable = (entry: string) => entry.replaceAll('\\', '/').replace(/\/+$/, '').toLowerCase();
+      const comparable = (entry: string) => {
+        const normalized = entry.replaceAll('\\', '/').replace(/\/+$/, '');
+        return navigator.userAgent.includes('Windows') ? normalized.toLowerCase() : normalized;
+      };
       if (engines.some((entry, position) => position !== index && comparable(entry) === comparable(selected))) {
         setError('That engine folder is already listed.');
         return;
